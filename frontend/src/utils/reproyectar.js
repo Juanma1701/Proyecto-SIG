@@ -24,3 +24,10 @@ export function reproyectarGeoJSON(geojson, epsgOrigen, epsgDestino) {
 
   return copia
 }
+
+export async function asegurarDefinicionEPSG(epsg) {
+  if (proj4.defs(`EPSG:${epsg}`)) return // ya está registrado
+  const res = await fetch(`https://epsg.io/${epsg}.proj4`)
+  const proj4str = await res.text()
+  proj4.defs(`EPSG:${epsg}`, proj4str.trim())
+}

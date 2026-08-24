@@ -14,13 +14,15 @@
     "@tmcw/togeojson": "^7.1.2",
     "leaflet": "^1.9.4",
     "lucide-react": "^1.34.0",
+    "maplibre-gl": "^6.6.0",
     "proj4": "^2.21.0",
     "proj4leaflet": "^1.0.2",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-leaflet": "^5.0.0",
     "react-router-dom": "^7.18.2",
-    "shpjs": "^6.2.0"
+    "shpjs": "^6.2.0",
+    "sonner": "^2.0.8"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

@@ -1,15 +1,18 @@
 import { useState } from 'react'
 import shp from 'shpjs'
 import { kml } from '@tmcw/togeojson'
-import L from 'leaflet'
 import { detectarCRS } from '../utils/detectarCRS'
+import { guardarCapaEnSupabase } from '../utils/guardarcapa'
+import { toast } from 'sonner'
+import { generarPuntosPrueba } from '../utils/generarPuntosPrueba'
 
-export default function CargarCapa({ mapa, capas, setCapas }) {
+export default function CargarCapa({ capas, setCapas }) {
   const [cargando, setCargando] = useState(false)
+  const [guardando, setGuardando] = useState(null)
 
   async function manejarArchivo(e) {
     const archivo = e.target.files[0]
-    if (!archivo || !mapa) return
+    if (!archivo) return
 
     setCargando(true)
     const extension = archivo.name.split('.').pop().toLowerCase()
@@ -25,10 +28,7 @@ export default function CargarCapa({ mapa, capas, setCapas }) {
 
       if (extension === 'zip') {
         const buffer = await archivo.arrayBuffer()
-        const resultado = await shp(buffer) // shpjs ya devuelve GeoJSON
-        geojson = resultado
-        // shpjs no expone el .prj crudo directamente en todos los casos;
-        // si necesitas el EPSG exacto, hay que leer el .prj aparte (ver utils/detectarCRS.js)
+        geojson = await shp(buffer)
         crsDetectado = await detectarCRS(archivo, 'shapefile')
       }
 
@@ -40,32 +40,95 @@ export default function CargarCapa({ mapa, capas, setCapas }) {
         crsDetectado = { epsg: 4326, fuente: 'especificación KML' }
       }
 
-      const capaLeaflet = L.geoJSON(geojson).addTo(mapa)
-      mapa.fitBounds(capaLeaflet.getBounds())
-
       const nuevaCapa = {
         id: crypto.randomUUID(),
         nombre: archivo.name,
+        archivoOriginal: archivo,
         geojson,
         crs: crsDetectado,
-        leafletLayer: capaLeaflet,
-        visible: true
+        visible: true,
+        guardadaEnNube: false
       }
 
       setCapas([...capas, nuevaCapa])
+      toast.success(`"${archivo.name}" cargada en el mapa`)
     } catch (error) {
       console.error(error)
-      alert('No se pudo procesar el archivo: ' + error.message)
+      toast.error('No se pudo procesar el archivo: ' + error.message)
     } finally {
       setCargando(false)
+    }
+  }
+
+  function manejarGenerarPrueba() {
+    const geojson = generarPuntosPrueba(5000)
+    const nuevaCapa = {
+      id: crypto.randomUUID(),
+      nombre: 'Prueba de rendimiento (5,000 puntos)',
+      archivoOriginal: null,
+      geojson,
+      crs: { epsg: 4326, fuente: 'generado localmente' },
+      visible: true,
+      guardadaEnNube: false
+    }
+    setCapas([...capas, nuevaCapa])
+    toast.success('5,000 puntos generados — compara los modos ahora')
+  }
+
+  async function manejarGuardar(capa) {
+    setGuardando(capa.id)
+    try {
+      await guardarCapaEnSupabase(capa.archivoOriginal, capa)
+      setCapas(prev => prev.map(c =>
+        c.id === capa.id ? { ...c, guardadaEnNube: true } : c
+      ))
+      toast.success(`"${capa.nombre}" guardada en la nube ☁️`)
+    } catch (error) {
+      console.error(error)
+      toast.error('Error al guardar: ' + error.message)
+    } finally {
+      setGuardando(null)
     }
   }
 
   return (
     <div>
       <label>Cargar capa (.geojson, .zip shapefile, .kml)</label>
+      <br />
       <input type="file" accept=".geojson,.json,.zip,.kml" onChange={manejarArchivo} disabled={cargando} />
-      {cargando && <p>Procesando...</p>}
+      {cargando && (
+        <p style={{ fontSize: 13, color: '#999' }}>
+          <span className="spinner"></span>Procesando archivo...
+        </p>
+      )}
+
+      <button
+        onClick={manejarGenerarPrueba}
+        style={{ marginTop: 10, background: '#7c3aed' }}
+      >
+        ⚡ Generar capa de prueba (5,000 puntos)
+      </button>
+
+      {capas.map(capa => (
+        <div key={capa.id} className="capa-item" style={{ marginTop: 10 }}>
+          <p>{capa.nombre}</p>
+          {capa.archivoOriginal ? (
+            !capa.guardadaEnNube ? (
+              <button onClick={() => manejarGuardar(capa)} disabled={guardando === capa.id}>
+                {guardando === capa.id ? (
+                  <><span className="spinner"></span>Guardando...</>
+                ) : (
+                  '☁️ Guardar en la nube'
+                )}
+              </button>
+            ) : (
+              <span style={{ color: '#4ade80', fontSize: 12 }}>☁️ Guardada</span>
+            )
+          ) : (
+            <span style={{ color: '#a78bfa', fontSize: 12 }}>⚡ Solo demo local</span>
+          )}
+        </div>
+      ))}
     </div>
   )
 }
