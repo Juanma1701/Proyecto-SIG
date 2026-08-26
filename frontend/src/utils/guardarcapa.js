@@ -1,15 +1,23 @@
 import { supabase } from '../lib/supabaseClient'
 
+function sanitizarNombre(nombre) {
+  return nombre
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9._-]/g, '_')
+}
+
 export async function guardarCapaEnSupabase(archivo, capa) {
-  // 1. Subir el archivo original al bucket
-  const rutaArchivo = `${Date.now()}_${archivo.name}`
-  const { error: errorStorage } = await supabase.storage
-    .from('archivos-capas')
-    .upload(rutaArchivo, archivo)
+  // 1. Subir el archivo original al bucket (solo si viene con archivo real)
+  if (archivo) {
+    const rutaArchivo = `${Date.now()}_${sanitizarNombre(archivo.name)}`
+    const { error: errorStorage } = await supabase.storage
+      .from('archivos-capas')
+      .upload(rutaArchivo, archivo)
 
-  if (errorStorage) throw errorStorage
+    if (errorStorage) throw errorStorage
+  }
 
-  // 2. Insertar la capa en la tabla 'capas' (esto reproyecta a 4326 automáticamente)
+  // 2. Insertar la capa (una fila por feature si es FeatureCollection)
   const { data, error } = await supabase.rpc('insertar_capa', {
     p_nombre: capa.nombre,
     p_geojson: capa.geojson,
@@ -18,5 +26,5 @@ export async function guardarCapaEnSupabase(archivo, capa) {
   })
 
   if (error) throw error
-  return data // devuelve el id (uuid) de la capa insertada
+  return data // ahora es un array de uuids, uno por cada feature insertado
 }

@@ -12,6 +12,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.112.4",
     "@tmcw/togeojson": "^7.1.2",
+    "jszip": "^3.10.1",
     "leaflet": "^1.9.4",
     "lucide-react": "^1.34.0",
     "maplibre-gl": "^6.6.0",
