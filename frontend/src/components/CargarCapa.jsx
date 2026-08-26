@@ -28,8 +28,29 @@ export default function CargarCapa({ capas, setCapas }) {
 
       if (extension === 'zip') {
         const buffer = await archivo.arrayBuffer()
-        geojson = await shp(buffer)
+        const resultado = await shp(buffer)
         crsDetectado = await detectarCRS(archivo, 'shapefile')
+
+        if (Array.isArray(resultado)) {
+        const grupoId = crypto.randomUUID()
+        const nuevasCapas = resultado.map((fc, i) => ({
+        id: crypto.randomUUID(),
+        nombre: fc.fileName || `${archivo.name} — capa ${i + 1}`,
+        archivoOriginal: i === 0 ? archivo : null,
+        geojson: fc,
+        crs: crsDetectado,
+        visible: true,
+        guardadaEnNube: false,
+        grupo: grupoId,
+        grupoNombre: archivo.name
+      }))
+
+      setCapas(prev => [...prev, ...nuevasCapas])
+      toast.success(`${nuevasCapas.length} capas cargadas desde "${archivo.name}"`)
+      setCargando(false)
+      return
+    }
+        geojson = resultado
       }
 
       if (extension === 'kml') {
