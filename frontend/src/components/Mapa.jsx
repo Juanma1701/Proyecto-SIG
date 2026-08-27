@@ -78,6 +78,14 @@ export default function Mapa({ capas, onMapReady, onClickMapa }) {
           // getBounds puede fallar si la capa está vacía; lo ignoramos
         }
       }
+
+      // Mostrar/ocultar según el checkbox
+      const layer = capasLeafletRef.current[capa.id]
+      if (capa.visible) {
+        if (!mapa.hasLayer(layer)) mapa.addLayer(layer)
+      } else {
+        if (mapa.hasLayer(layer)) mapa.removeLayer(layer)
+      }
     })
   }, [capas])
 

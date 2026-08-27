@@ -20,7 +20,7 @@ export async function detectarCRSShapefile(archivoZip) {
 
   const wkt = await zip.files[prjFile].async('text')
   const epsg = await resolverEPSGDesdeWKT(wkt)
-  return { epsg, fuente: `.prj (${wkt.slice(0, 40)}...)` }
+  return { epsg: epsg || 4326, fuente: `.prj (${wkt.slice(0, 40)}...)` }
 }
 
 // Consulta a epsg.io para resolver el código EPSG a partir del WKT
@@ -34,7 +34,7 @@ async function resolverEPSGDesdeWKT(wkt) {
   } catch (e) {
     console.warn('No se pudo resolver EPSG desde epsg.io', e)
   }
-  return null // desconocido
+  return 4326 // desconocido
 }
 
 export async function detectarCRS(input, tipo) {

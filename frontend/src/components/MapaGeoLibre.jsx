@@ -25,144 +25,166 @@ function calcularBounds(geojson) {
   return [[minLng, minLat], [maxLng, maxLat]]
 }
 
+function limpiarZ(geojson) {
+  function limpiarCoords(coords) {
+    if (typeof coords[0] === 'number') {
+      return coords.slice(0, 2)
+    }
+    return coords.map(limpiarCoords)
+  }
+
+  const copia = JSON.parse(JSON.stringify(geojson))
+  const features = copia.type === 'FeatureCollection' ? copia.features : [copia]
+  features.forEach(f => {
+    f.geometry.coordinates = limpiarCoords(f.geometry.coordinates)
+  })
+  return copia
+}
+
 export default function MapaGeoLibre({ capas, onMapReady, onClickMapa }) {
   const mapRef = useRef(null)
   const contenedorRef = useRef(null)
-  const cargadoRef = useRef(false) // indica si el mapa ya terminó de cargar su estilo
+  const cargadoRef = useRef(false)
 
   function sincronizarCapas() {
     const mapa = mapRef.current
-    console.log('sincronizarCapas llamado. mapa:', !!mapa, 'cargado:', cargadoRef.current, 'capas:', capas.length)
     if (!mapa || !cargadoRef.current) return
+
+    let boundsGlobal = null
 
     capas.forEach(capa => {
       const sourceId = `capa-${capa.id}`
-      console.log('procesando capa', capa.nombre, 'features:', capa.geojson?.features?.length)
+      const visibilidad = capa.visible ? 'visible' : 'none'
 
       if (mapa.getSource(sourceId)) {
-        mapa.getSource(sourceId).setData(capa.geojson)
-        console.log('fuente ya existía, datos actualizados')
+        mapa.getSource(sourceId).setData(limpiarZ(capa.geojson))
+
+        if (mapa.getLayer(`${sourceId}-layer`)) {
+          mapa.setLayoutProperty(`${sourceId}-layer`, 'visibility', visibilidad)
+        }
+        if (mapa.getLayer(`${sourceId}-outline`)) {
+          mapa.setLayoutProperty(`${sourceId}-outline`, 'visibility', visibilidad)
+        }
         return
       }
 
       try {
-        mapa.addSource(sourceId, { type: 'geojson', data: capa.geojson })
-        console.log('fuente agregada:', sourceId)
+        mapa.addSource(sourceId, { type: 'geojson', data: limpiarZ(capa.geojson) })
 
         const bounds = calcularBounds(capa.geojson)
         if (bounds) {
-          mapa.fitBounds(bounds, { padding: 40, duration: 0 })
-          console.log('cámara ajustada a los límites de la capa')
+          if (!boundsGlobal) {
+            boundsGlobal = bounds
+          } else {
+            boundsGlobal = [
+              [Math.min(boundsGlobal[0][0], bounds[0][0]), Math.min(boundsGlobal[0][1], bounds[0][1])],
+              [Math.max(boundsGlobal[1][0], bounds[1][0]), Math.max(boundsGlobal[1][1], bounds[1][1])]
+            ]
+          }
         }
 
         const tipo = capa.geojson?.features?.[0]?.geometry?.type || capa.geojson?.type || ''
-        console.log('tipo detectado:', tipo)
 
         if (tipo.includes('Point')) {
-            mapa.addLayer({
-                id: `${sourceId}-layer`,
-                type: 'circle',
-                source: sourceId,
-                paint: {
-                    'circle-radius': 15,
-                    'circle-color': '#ff0000',
-                    'circle-opacity': 1
-                }
-            })
-            console.log('capa de círculos agregada')
+          mapa.addLayer({
+            id: `${sourceId}-layer`,
+            type: 'circle',
+            source: sourceId,
+            paint: { 'circle-radius': 10, 'circle-color': '#ff00ff' }
+          })
+          mapa.setLayoutProperty(`${sourceId}-layer`, 'visibility', visibilidad)
         } else if (tipo.includes('Line')) {
           mapa.addLayer({
             id: `${sourceId}-layer`,
             type: 'line',
             source: sourceId,
-            paint: { 'line-color': '#fbbf24', 'line-width': 2 }
+            paint: { 'line-color': '#ff00ff', 'line-width': 6 }
           })
-          console.log('capa de línea agregada')
+          mapa.setLayoutProperty(`${sourceId}-layer`, 'visibility', visibilidad)
         } else {
           mapa.addLayer({
             id: `${sourceId}-layer`,
             type: 'fill',
             source: sourceId,
-            paint: { 'fill-color': '#4ade80', 'fill-opacity': 0.4 }
+            paint: { 'fill-color': '#ff00ff', 'fill-opacity': 0.9 }
           })
           mapa.addLayer({
             id: `${sourceId}-outline`,
             type: 'line',
             source: sourceId,
-            paint: { 'line-color': '#4ade80', 'line-width': 1.5 }
+            paint: { 'line-color': '#ff00ff', 'line-width': 4 }
           })
-          console.log('capa de polígono agregada')
+          mapa.setLayoutProperty(`${sourceId}-layer`, 'visibility', visibilidad)
+          mapa.setLayoutProperty(`${sourceId}-outline`, 'visibility', visibilidad)
         }
       } catch (err) {
         console.error('ERROR al agregar capa:', err)
       }
     })
+
+    if (boundsGlobal) {
+      mapa.fitBounds(boundsGlobal, { padding: 40, duration: 0 })
+    }
   }
 
-  // Inicializar el mapa una sola vez
   useEffect(() => {
-        let cancelado = false
-        let mapaLocal = null
+    let cancelado = false
+    let mapaLocal = null
 
-        const mapa = new maplibregl.Map({
-            container: contenedorRef.current,
-            style: {
-                version: 8,
-                sources: {
-                    'osm-tiles': {
-                        type: 'raster',
-                        tiles: [
-                            'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                            'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                            'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png'
-                        ],
-                        tileSize: 256,
-                        attribution: '&copy; OpenStreetMap contributors'
-                    }
-                },
-                layers: [
-                    {
-                        id: 'osm-tiles-layer',
-                        type: 'raster',
-                        source: 'osm-tiles'
-                    }
-                ]
-            },
-            center: [-75.56, 6.25],
-            zoom: 11
-        })
+    const mapa = new maplibregl.Map({
+      container: contenedorRef.current,
+      style: {
+        version: 8,
+        sources: {
+          'osm-tiles': {
+            type: 'raster',
+            tiles: [
+              'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
+              'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
+              'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png'
+            ],
+            tileSize: 256,
+            attribution: '&copy; OpenStreetMap contributors'
+          }
+        },
+        layers: [
+          { id: 'osm-tiles-layer', type: 'raster', source: 'osm-tiles' }
+        ]
+      },
+      center: [-75.56, 6.25],
+      zoom: 11
+    })
 
-        mapaLocal = mapa
+    mapaLocal = mapa
 
-        mapa.addControl(new maplibregl.NavigationControl(), 'top-left')
+    mapa.addControl(new maplibregl.NavigationControl(), 'top-left')
 
-        mapa.on('click', (e) => {
-            onClickMapa && onClickMapa({ lat: e.lngLat.lat, lng: e.lngLat.lng })
-        })
+    mapa.on('click', (e) => {
+      onClickMapa && onClickMapa({ lat: e.lngLat.lat, lng: e.lngLat.lng })
+    })
 
-        mapa.on('load', () => {
-            if (cancelado) {
-                // Este efecto ya fue "cancelado" por StrictMode; no usar esta instancia
-                mapa.remove()
-                return
-            }
-            mapRef.current = mapa
-            cargadoRef.current = true
-            onMapReady && onMapReady(mapa)
-            sincronizarCapas()
-        })
+    mapa.on('load', () => {
+      if (cancelado) {
+        mapa.remove()
+        return
+      }
+      mapRef.current = mapa
+      window.__debugMapa = mapa
+      cargadoRef.current = true
+      onMapReady && onMapReady(mapa)
+      sincronizarCapas()
+    })
 
-        return () => {
-            cancelado = true
-            if (mapRef.current === mapaLocal) {
-                mapRef.current = null
-                cargadoRef.current = false
-            }
-            mapaLocal.remove()
-        }
-    }, [])
+    return () => {
+      cancelado = true
+      if (mapRef.current === mapaLocal) {
+        mapRef.current = null
+        cargadoRef.current = false
+      }
+      mapaLocal.remove()
+    }
+  }, [])
 
-  // Sincronizar capas cada vez que cambian (mientras el mapa ya esté listo)
   useEffect(() => {
     sincronizarCapas()
   }, [capas])
