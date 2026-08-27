@@ -2,6 +2,7 @@ import { useState } from 'react'
 import InfoCRS from './InfoCRS'
 import { reproyectarGeoJSON, asegurarDefinicionEPSG } from '../utils/reproyectar'
 import { toast } from 'sonner'
+import '../styles/PanelCapas.css'
 
 function badgeInfo(geojson) {
   const tipo = geojson?.features?.[0]?.geometry?.type || geojson?.type || ''

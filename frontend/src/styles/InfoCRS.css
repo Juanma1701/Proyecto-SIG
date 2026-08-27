@@ -1,0 +1,22 @@
+.info-crs {
+  padding: 10px;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  color: #e2e8f0;
+  background: #0f172a;
+  font-size: 13px;
+}
+
+.info-crs strong {
+  color: #f8fafc;
+}
+
+.capa-item .info-crs p {
+  margin: 6px 0 0;
+  color: #93c5fd;
+}
+
+.info-crs__fuente {
+  color: #cbd5e1 !important;
+  opacity: 1;
+}
