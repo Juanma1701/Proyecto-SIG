@@ -5,6 +5,7 @@ import { detectarCRS } from '../utils/detectarCRS'
 import { guardarCapaEnSupabase } from '../utils/guardarcapa'
 import { toast } from 'sonner'
 import { generarPuntosPrueba } from '../utils/generarPuntosPrueba'
+import '../styles/CargarCapa.css'
 
 export default function CargarCapa({ capas, setCapas }) {
   const [cargando, setCargando] = useState(false)
@@ -97,20 +98,20 @@ export default function CargarCapa({ capas, setCapas }) {
       <br />
       <input type="file" accept=".geojson,.json,.zip,.kml" onChange={manejarArchivo} disabled={cargando} />
       {cargando && (
-        <p style={{ fontSize: 13, color: '#999' }}>
+        <p className="cargar-capa__estado">
           <span className="spinner"></span>Procesando archivo...
         </p>
       )}
 
       <button
         onClick={manejarGenerarPrueba}
-        style={{ marginTop: 10, background: '#7c3aed' }}
+        className="cargar-capa__boton-prueba"
       >
         ⚡ Generar capa de prueba (5,000 puntos)
       </button>
 
       {capas.map(capa => (
-        <div key={capa.id} className="capa-item" style={{ marginTop: 10 }}>
+        <div key={capa.id} className="capa-item cargar-capa__item">
           <p>{capa.nombre}</p>
           {capa.archivoOriginal ? (
             !capa.guardadaEnNube ? (
@@ -122,10 +123,10 @@ export default function CargarCapa({ capas, setCapas }) {
                 )}
               </button>
             ) : (
-              <span style={{ color: '#4ade80', fontSize: 12 }}>☁️ Guardada</span>
+              <span className="cargar-capa__estado cargar-capa__estado--guardada">☁️ Guardada</span>
             )
           ) : (
-            <span style={{ color: '#a78bfa', fontSize: 12 }}>⚡ Solo demo local</span>
+            <span className="cargar-capa__estado cargar-capa__estado--local">⚡ Solo demo local</span>
           )}
         </div>
       ))}

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import * as maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
+import '../styles/MapaGeoLibre.css'
 
 function calcularBounds(geojson) {
   let minLng = Infinity, minLat = Infinity, maxLng = -Infinity, maxLat = -Infinity
@@ -166,5 +167,5 @@ export default function MapaGeoLibre({ capas, onMapReady, onClickMapa }) {
     sincronizarCapas()
   }, [capas])
 
-  return <div ref={contenedorRef} style={{ height: '100vh', width: '100%' }} />
+  return <div ref={contenedorRef} className="mapa-contenedor" />
 }

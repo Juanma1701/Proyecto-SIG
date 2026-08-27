@@ -1,13 +1,21 @@
 import { useEffect, useRef } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import '../styles/Mapa.css'
 
 export default function Mapa({ capas, onMapReady, onClickMapa }) {
   const mapRef = useRef(null)
   const contenedorRef = useRef(null)
-  const capasLeafletRef = useRef({}) // guarda las layers de Leaflet por id de capa
+  const capasLeafletRef = useRef({})
+  const marcadorRef = useRef(null)
+  const onClickMapaRef = useRef(onClickMapa)
+  const onMapReadyRef = useRef(onMapReady)
 
-  // Inicializar el mapa una sola vez
+  useEffect(() => {
+    onClickMapaRef.current = onClickMapa
+    onMapReadyRef.current = onMapReady
+  }, [onClickMapa, onMapReady])
+
   useEffect(() => {
     if (mapRef.current) return
 
@@ -18,19 +26,25 @@ export default function Mapa({ capas, onMapReady, onClickMapa }) {
     }).addTo(mapa)
 
     mapa.on('click', (e) => {
-      onClickMapa && onClickMapa(e.latlng)
+      onClickMapaRef.current && onClickMapaRef.current(e.latlng)
+
+      if (marcadorRef.current) {
+        marcadorRef.current.setLatLng(e.latlng)
+      } else {
+        marcadorRef.current = L.marker(e.latlng).addTo(mapa)
+      }
     })
 
     mapRef.current = mapa
-    onMapReady && onMapReady(mapa)
+    onMapReadyRef.current && onMapReadyRef.current(mapa)
 
     return () => {
       mapa.remove()
       mapRef.current = null
+      marcadorRef.current = null
     }
   }, [])
 
-  // Sincronizar capas cada vez que cambian
   useEffect(() => {
     const mapa = mapRef.current
     if (!mapa) return
@@ -60,12 +74,12 @@ export default function Mapa({ capas, onMapReady, onClickMapa }) {
         // Solo hace zoom automático cuando se agrega la primera capa nueva
         try {
           mapa.fitBounds(layer.getBounds())
-        } catch (e) {
+        } catch {
           // getBounds puede fallar si la capa está vacía; lo ignoramos
         }
       }
     })
   }, [capas])
 
-  return <div ref={contenedorRef} style={{ height: '100vh', width: '100%' }} />
+  return <div ref={contenedorRef} className="mapa-contenedor" />
 }

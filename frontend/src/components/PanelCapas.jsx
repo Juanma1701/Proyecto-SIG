@@ -2,6 +2,7 @@ import { useState } from 'react'
 import InfoCRS from './InfoCRS'
 import { reproyectarGeoJSON, asegurarDefinicionEPSG } from '../utils/reproyectar'
 import { toast } from 'sonner'
+import '../styles/PanelCapas.css'
 
 function badgeInfo(geojson) {
   const tipo = geojson?.features?.[0]?.geometry?.type || geojson?.type || ''
@@ -43,7 +44,7 @@ export default function PanelCapas({ capas, setCapas }) {
       {capas.map(capa => {
         const badge = badgeInfo(capa.geojson)
         return (
-          <div key={capa.id} className="capa-item" style={{ marginBottom: 10 }}>
+          <div key={capa.id} className="capa-item panel-capas__item">
             <p>
               {capa.nombre}
               <span className={`badge ${badge.clase}`}>{badge.texto}</span>
