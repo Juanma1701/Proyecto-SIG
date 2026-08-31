@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import '../styles/Mapa.css'
+import { obtenerCategoria, estiloCategoria } from '../utils/categoriasEquipamiento'
 
 export default function Mapa({ capas, onMapReady, onClickMapa }) {
   const mapRef = useRef(null)
@@ -62,13 +63,28 @@ export default function Mapa({ capas, onMapReady, onClickMapa }) {
 
     // Agregar o actualizar cada capa
     capas.forEach(capa => {
+      const esEquipamiento = capa.crs?.fuente === 'API ArcGIS REST (AMVA)'
+
+      const opcionesEstilo = esEquipamiento ? {
+        style: (feature) => {
+          const cat = obtenerCategoria(feature)
+          const { color } = estiloCategoria(cat)
+          return { color, weight: 2, fillColor: color, fillOpacity: 0.45 }
+        },
+        pointToLayer: (feature, latlng) => {
+          const cat = obtenerCategoria(feature)
+          const { color } = estiloCategoria(cat)
+          return L.circleMarker(latlng, { radius: 6, color, fillColor: color, fillOpacity: 0.85, weight: 1 })
+        }
+      } : {}
+
       if (capasLeafletRef.current[capa.id]) {
-        // Ya existe: actualiza los datos (por ejemplo, tras reproyectar)
+        // Ya existe: actualiza los datos (por ejemplo, tras reproyectar o filtrar)
         capasLeafletRef.current[capa.id].clearLayers()
         capasLeafletRef.current[capa.id].addData(capa.geojson)
       } else {
         // No existe: créala y agrégala
-        const layer = L.geoJSON(capa.geojson).addTo(mapa)
+        const layer = L.geoJSON(capa.geojson, opcionesEstilo).addTo(mapa)
         capasLeafletRef.current[capa.id] = layer
 
         // Solo hace zoom automático cuando se agrega la primera capa nueva
