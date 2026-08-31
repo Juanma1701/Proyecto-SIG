@@ -5,7 +5,7 @@ import PanelCapas from "../components/PanelCapas";
 import CargarCapa from "../components/CargarCapa";
 import '../styles/Dashboard.css'
 import SeleccionarCapa from '../components/SeleccionarCapa';
-import { MapPin} from 'lucide-react'
+
 
 export default function App() {
   const [capas, setCapas] = useState([])
