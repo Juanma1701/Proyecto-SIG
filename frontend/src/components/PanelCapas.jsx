@@ -52,7 +52,10 @@ export default function PanelCapas({ capas, setCapas }) {
     setGruposAbiertos(prev => ({ ...prev, [grupoId]: !prev[grupoId] }))
   }
 
-  // Separa capas sueltas (sin grupo) de capas agrupadas
+  function eliminarCapa(id) {
+    setCapas(capas.filter(c => c.id !== id))
+  }
+
   const capasSueltas = capas.filter(c => !c.grupo)
   const grupos = {}
   capas.filter(c => c.grupo).forEach(c => {
@@ -62,35 +65,45 @@ export default function PanelCapas({ capas, setCapas }) {
 
   function renderCapa(capa) {
     const badge = badgeInfo(capa.geojson)
+
     return (
-      <div key={capa.id} className="capa-item" style={{ marginBottom: 8 }}>
-        <p>
-          {capa.nombre}
-          <span className={`badge ${badge.clase}`}>{badge.texto}</span>
-        </p>
-        <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, marginBottom: 6 }}>
+      <div key={capa.id} className={`capa-chip-wrapper ${capa.visible ? '' : 'oculta'}`}>
+        <div className="capa-chip-header">
+          <span className="capa-chip-nombre">
+            {capa.nombre}
+            <span className={`badge ${badge.clase}`}>{badge.texto}</span>
+          </span>
+          <div className="capa-chip-acciones">
+            <label className="switch">
+              <input
+                type="checkbox"
+                checked={capa.visible}
+                onChange={() => setCapas(capas.map(c =>
+                  c.id === capa.id ? { ...c, visible: !c.visible } : c
+                ))}
+              />
+              <span className="switch-slider"></span>
+            </label>
+            <button className="capa-chip-eliminar" onClick={() => eliminarCapa(capa.id)}>🗑️</button>
+          </div>
+        </div>
+
+        <div className="capa-chip-detalle">
+          <InfoCRS crs={capa.crs} />
+
           <input
-            type="checkbox"
-            checked={capa.visible}
-            onChange={() => setCapas(capas.map(c =>
-              c.id === capa.id ? { ...c, visible: !c.visible } : c
-            ))}
+            placeholder="EPSG destino (ej: 3116)"
+            value={sridDestino[capa.id] || ''}
+            onChange={e => setSridDestino({ ...sridDestino, [capa.id]: e.target.value })}
           />
-          Mostrar en el mapa
-        </label>
-        <InfoCRS crs={capa.crs} />
-        <input
-          placeholder="EPSG destino (ej: 3116)"
-          value={sridDestino[capa.id] || ''}
-          onChange={e => setSridDestino({ ...sridDestino, [capa.id]: e.target.value })}
-        />
-        <button onClick={() => manejarReproyeccion(capa)} disabled={reproyectando === capa.id}>
-          {reproyectando === capa.id ? (
-            <><span className="spinner"></span>Reproyectando...</>
-          ) : (
-            'Reproyectar'
-          )}
-        </button>
+          <button onClick={() => manejarReproyeccion(capa)} disabled={reproyectando === capa.id}>
+            {reproyectando === capa.id ? (
+              <><span className="spinner"></span>Reproyectando...</>
+            ) : (
+              'Reproyectar'
+            )}
+          </button>
+        </div>
       </div>
     )
   }

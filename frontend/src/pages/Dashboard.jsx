@@ -5,13 +5,16 @@ import PanelCapas from "../components/PanelCapas";
 import CargarCapa from "../components/CargarCapa";
 import '../styles/Dashboard.css'
 import SeleccionarCapa from '../components/SeleccionarCapa';
-
+import CargarCapaAPI from "../components/CargarCapaAPI";
+import LeyendaFlotante from "../components/LeyendaFlotante";
+import { MapPin, Filter } from 'lucide-react'
 
 export default function App() {
   const [capas, setCapas] = useState([])
   const [coordenada, setCoordenada] = useState(null)
   const [modoRenderer, setModoRenderer] = useState('leaflet')
   const [captura, setCaptura] = useState("")
+  const [filtrosAbiertos, setFiltrosAbiertos] = useState(false)
 
   const handleCaptureCoordenada = (lat, lng) => {
     setCaptura({ lat, lng })
@@ -46,6 +49,10 @@ export default function App() {
         </div>
 
         <div className="sidebar-section">
+          <CargarCapaAPI capas={capas} setCapas={setCapas} />
+        </div>
+
+        <div className="sidebar-section">
           <h3>Capas cargadas</h3>
           <PanelCapas capas={capas} setCapas={setCapas} />
         </div>
@@ -66,18 +73,29 @@ export default function App() {
           <SeleccionarCapa 
             setCapas={setCapas}
             captura={captura}
-            
-          
           />
         </div>
       </aside>
 
-      {modoRenderer === 'leaflet' ? (
-        <Mapa capas={capas} onMapReady={() => {}} onClickMapa={setCoordenada} />
-      ) : (
-        <MapaGeoLibre capas={capas} onMapReady={() => {}} onClickMapa={setCoordenada} />
+      <div className="dashboard__mapa-contenedor">
+        {modoRenderer === 'leaflet' ? (
+          <Mapa capas={capas} onMapReady={() => {}} onClickMapa={setCoordenada} />
+        ) : (
+          <MapaGeoLibre capas={capas} onMapReady={() => {}} onClickMapa={setCoordenada} />
+        )}
+
+        <button
+          className={`btn-toggle-filtros ${filtrosAbiertos ? 'activo' : ''}`}
+          onClick={() => setFiltrosAbiertos(!filtrosAbiertos)}
+          title="Filtros"
+        >
+          <Filter size={18} />
+        </button>
+      </div>
+
+      {filtrosAbiertos && (
+        <LeyendaFlotante capas={capas} setCapas={setCapas} />
       )}
-      
     </div>
   )
 }

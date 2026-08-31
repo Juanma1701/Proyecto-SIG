@@ -1,12 +1,7 @@
 .cargar-capa__estado {
   margin: 0;
-  color: #999;
+  color: var(--color-texto-secundario);
   font-size: 13px;
-}
-
-.cargar-capa__boton-prueba {
-  margin-top: 10px;
-  background: #7c3aed;
 }
 
 .cargar-capa__item {
@@ -14,11 +9,89 @@
 }
 
 .cargar-capa__estado--guardada {
-  color: #4ade80 !important;
+  color: var(--color-acento) !important;
   font-size: 12px;
 }
 
 .cargar-capa__estado--local {
   color: #a78bfa !important;
   font-size: 12px;
+}
+
+.dropzone {
+  border: 2px dashed var(--color-borde-hover);
+  border-radius: 14px;
+  padding: 24px 16px;
+  text-align: center;
+  transition: border-color 0.2s, background 0.2s;
+  margin-bottom: 12px;
+  background: rgba(59, 130, 246, 0.03);
+}
+
+.dropzone:hover {
+  border-color: var(--color-acento);
+  background: rgba(59, 130, 246, 0.07);
+}
+
+.dropzone-icon {
+  font-size: 28px;
+  color: var(--color-acento);
+  margin-bottom: 8px;
+}
+
+.dropzone-titulo {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-texto);
+  margin: 4px 0;
+}
+
+.dropzone-subtitulo {
+  font-size: 11px;
+  color: var(--color-texto-secundario);
+  margin-bottom: 12px;
+}
+
+.dropzone-formatos {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  font-size: 11px;
+  color: var(--color-texto-secundario);
+  margin-bottom: 14px;
+}
+
+.dropzone-boton {
+  background: var(--color-acento);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  display: inline-block;
+  transition: background 0.2s;
+}
+
+.dropzone-boton:hover {
+  background: var(--color-acento-hover);
+}
+
+.avanzado {
+  margin: 12px 0;
+}
+
+.avanzado__toggle {
+  background: transparent;
+  border: none;
+  color: var(--color-texto-secundario);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.cargar-capa__boton-prueba {
+  display: block;
+  margin-top: 8px;
+  width: 100%;
+  background: #7c3aed;
 }
