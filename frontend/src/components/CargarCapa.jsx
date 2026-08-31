@@ -10,6 +10,7 @@ import '../styles/CargarCapa.css'
 export default function CargarCapa({ capas, setCapas }) {
   const [cargando, setCargando] = useState(false)
   const [guardando, setGuardando] = useState(null)
+  const [avanzadoAbierto, setAvanzadoAbierto] = useState(false)
 
   async function manejarArchivo(e) {
     const archivo = e.target.files[0]
@@ -33,24 +34,24 @@ export default function CargarCapa({ capas, setCapas }) {
         crsDetectado = await detectarCRS(archivo, 'shapefile')
 
         if (Array.isArray(resultado)) {
-        const grupoId = crypto.randomUUID()
-        const nuevasCapas = resultado.map((fc, i) => ({
-        id: crypto.randomUUID(),
-        nombre: fc.fileName || `${archivo.name} — capa ${i + 1}`,
-        archivoOriginal: i === 0 ? archivo : null,
-        geojson: fc,
-        crs: crsDetectado,
-        visible: true,
-        guardadaEnNube: false,
-        grupo: grupoId,
-        grupoNombre: archivo.name
-      }))
+          const grupoId = crypto.randomUUID()
+          const nuevasCapas = resultado.map((fc, i) => ({
+            id: crypto.randomUUID(),
+            nombre: fc.fileName || `${archivo.name} — capa ${i + 1}`,
+            archivoOriginal: i === 0 ? archivo : null,
+            geojson: fc,
+            crs: crsDetectado,
+            visible: true,
+            guardadaEnNube: false,
+            grupo: grupoId,
+            grupoNombre: archivo.name
+          }))
 
-      setCapas(prev => [...prev, ...nuevasCapas])
-      toast.success(`${nuevasCapas.length} capas cargadas desde "${archivo.name}"`)
-      setCargando(false)
-      return
-    }
+          setCapas(prev => [...prev, ...nuevasCapas])
+          toast.success(`${nuevasCapas.length} capas cargadas desde "${archivo.name}"`)
+          setCargando(false)
+          return
+        }
         geojson = resultado
       }
 
@@ -115,21 +116,44 @@ export default function CargarCapa({ capas, setCapas }) {
 
   return (
     <div>
-      <label>Cargar capa (.geojson, .zip shapefile, .kml)</label>
-      <br />
-      <input type="file" accept=".geojson,.json,.zip,.kml" onChange={manejarArchivo} disabled={cargando} />
+      <div className="dropzone">
+        <div className="dropzone-icon">⬆</div>
+        <p className="dropzone-titulo">Cargar capa</p>
+        <p className="dropzone-subtitulo">Arrastra archivos o haz clic para elegir</p>
+        <div className="dropzone-formatos">
+          <span>📄 .geojson</span>
+          <span>📁 .zip</span>
+          <span>🗺️ .kml</span>
+        </div>
+        <input
+          type="file"
+          accept=".geojson,.json,.zip,.kml"
+          onChange={manejarArchivo}
+          disabled={cargando}
+          style={{ display: 'none' }}
+          id="input-archivo"
+        />
+        <label htmlFor="input-archivo" className="dropzone-boton">
+          Elegir archivo
+        </label>
+      </div>
+
       {cargando && (
         <p className="cargar-capa__estado">
           <span className="spinner"></span>Procesando archivo...
         </p>
       )}
 
-      <button
-        onClick={manejarGenerarPrueba}
-        className="cargar-capa__boton-prueba"
-      >
-        ⚡ Generar capa de prueba (5,000 puntos)
-      </button>
+      <div className="avanzado">
+        <button className="avanzado__toggle" onClick={() => setAvanzadoAbierto(!avanzadoAbierto)}>
+          {avanzadoAbierto ? '▾' : '▸'} Opciones avanzadas
+        </button>
+        {avanzadoAbierto && (
+          <button onClick={manejarGenerarPrueba} className="cargar-capa__boton-prueba">
+            ⚡ Generar capa de prueba (5,000 puntos)
+          </button>
+        )}
+      </div>
 
       {capas.map(capa => (
         <div key={capa.id} className="capa-item cargar-capa__item">
