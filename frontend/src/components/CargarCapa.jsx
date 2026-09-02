@@ -88,7 +88,7 @@ export default function CargarCapa({ capas, setCapas }) {
       setCapas(prev => prev.map(c =>
         c.id === capa.id ? { ...c, guardadaEnNube: true } : c
       ))
-      toast.success(`"${capa.nombre}" guardada en la nube ☁️`)
+      toast.success(`"${capa.nombre}" guardada en la nube`)
     } catch (error) {
       console.error(error)
       toast.error('Error al guardar: ' + error.message)
@@ -104,8 +104,8 @@ export default function CargarCapa({ capas, setCapas }) {
         <p className="dropzone-titulo">Cargar capa</p>
         <p className="dropzone-subtitulo">Arrastra archivos o haz clic para elegir</p>
         <div className="dropzone-formatos">
-          <span><File />.geojson</span>
-          <span><Folder />.zip</span>
+          <span><File /> .geojson</span>
+          <span><Folder /> .zip</span>
           <span><MapPlus /> .kml</span>
         </div>
         <input
@@ -135,11 +135,11 @@ export default function CargarCapa({ capas, setCapas }) {
               {guardando === capa.id ? (
                 <><span className="spinner"></span>Guardando...</>
               ) : (
-                '☁️ Guardar en la nube'
+                'Guardar en la nube'
               )}
             </button>
           ) : (
-            <span className="cargar-capa__estado cargar-capa__estado--guardada">☁️ Guardada</span>
+            <span className="cargar-capa__estado cargar-capa__estado--guardada"> Guardada</span>
           )}
         </div>
       ))}

@@ -125,25 +125,27 @@ export default function PanelCapas({ capas, setCapas }) {
     )
   }
 
-  if (capas.length === 0) return null
-
   return (
     <div className="panel-capas__contenedor">
-      <div className="panel-capas__acciones-principales">
-        <button className="panel-capas__accion panel-capas__accion--activo" onClick={() => marcarTodas(true)}>
-          Marcar todo
-        </button>
-        <button className="panel-capas__accion panel-capas__accion--inactivo" onClick={() => marcarTodas(false)}>
-          Desmarcar todo
-        </button>
-      </div>
+      {capas.length === 0 ? (
+        <p className="panel-capas__vacio">No hay capas cargadas</p>
+      ) : (
+        <>
+          <div className="panel-capas__acciones-principales">
+            <button className="panel-capas__accion panel-capas__accion--activo" onClick={() => marcarTodas(true)}>
+              Marcar todo
+            </button>
+            <button className="panel-capas__accion panel-capas__accion--inactivo" onClick={() => marcarTodas(false)}>
+              Desmarcar todo
+            </button>
+          </div>
 
-      {Object.entries(grupos).map(([grupoId, grupo]) => {
+          {Object.entries(grupos).map(([grupoId, grupo]) => {
         const abierto = gruposAbiertos[grupoId] ?? false
         const visibles = grupo.capas.filter(c => c.visible).length
 
-        return (
-          <div key={grupoId} className="panel-capas__grupo">
+            return (
+              <div key={grupoId} className="panel-capas__grupo">
             <div className="panel-capas__grupo-header" onClick={() => toggleGrupoAbierto(grupoId)}>
               <p className="panel-capas__grupo-titulo">
                 {abierto ? '▾' : '▸'} {grupo.nombre}
@@ -173,11 +175,13 @@ export default function PanelCapas({ capas, setCapas }) {
                 {grupo.capas.map(renderCapa)}
               </div>
             )}
-          </div>
-        )
-      })}
+              </div>
+            )
+          })}
 
-      {capasSueltas.map(renderCapa)}
+          {capasSueltas.map(renderCapa)}
+        </>
+      )}
     </div>
   )
 }

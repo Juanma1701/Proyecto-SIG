@@ -145,7 +145,7 @@ export default function CargarCapaAPI({ setCapas }) {
         {cargandoDatos ? (
           <><span className="spinner"></span>Cargando datos...</>
         ) : (
-          <><Globe size={18} /><span>Cargar capa</span></>
+          <><Globe size={12} />  <span>Cargar capa</span></>
         )}
       </button>
     </div>
