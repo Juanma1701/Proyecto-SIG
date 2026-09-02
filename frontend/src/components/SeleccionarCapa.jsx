@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react'
 import '../styles/SeleccionarCapa.css'
-import { Map } from 'lucide-react'
+import { MapPinned } from 'lucide-react'
 import { toast } from 'sonner'
 import { capaDesdeZona } from '../utils/capaDesdeZona'
-
 function crearZonaBusqueda(latitud, longitud, radioKm) {
     return {
         id: crypto.randomUUID(),
@@ -66,7 +65,7 @@ function SeleccionarCapa({ setCapas, captura }) {
     return (
         <div className="zona-selector">
             <div className="zona-selector__encabezado">
-                <h4>Mapear una zona <Map /></h4>
+                <h4>Mapear una zona <MapPinned /></h4>
                 <p>Define un centro y un radio para crear una zona en el mapa.</p>
             </div>
             {captura && (
