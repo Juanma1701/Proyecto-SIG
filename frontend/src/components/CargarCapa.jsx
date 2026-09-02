@@ -4,13 +4,11 @@ import { kml } from '@tmcw/togeojson'
 import { detectarCRS } from '../utils/detectarCRS'
 import { guardarCapaEnSupabase } from '../utils/guardarcapa'
 import { toast } from 'sonner'
-import { generarPuntosPrueba } from '../utils/generarPuntosPrueba'
 import '../styles/CargarCapa.css'
 
 export default function CargarCapa({ capas, setCapas }) {
   const [cargando, setCargando] = useState(false)
   const [guardando, setGuardando] = useState(null)
-  const [avanzadoAbierto, setAvanzadoAbierto] = useState(false)
 
   async function manejarArchivo(e) {
     const archivo = e.target.files[0]
@@ -143,17 +141,6 @@ export default function CargarCapa({ capas, setCapas }) {
           <span className="spinner"></span>Procesando archivo...
         </p>
       )}
-
-      <div className="avanzado">
-        <button className="avanzado__toggle" onClick={() => setAvanzadoAbierto(!avanzadoAbierto)}>
-          {avanzadoAbierto ? '▾' : '▸'} Opciones avanzadas
-        </button>
-        {avanzadoAbierto && (
-          <button onClick={manejarGenerarPrueba} className="cargar-capa__boton-prueba">
-            ⚡ Generar capa de prueba (5,000 puntos)
-          </button>
-        )}
-      </div>
 
       {capas.map(capa => (
         <div key={capa.id} className="capa-item cargar-capa__item">

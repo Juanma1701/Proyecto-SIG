@@ -7,6 +7,8 @@ import '../styles/Dashboard.css'
 import SeleccionarCapa from '../components/SeleccionarCapa';
 import CargarCapaAPI from "../components/CargarCapaAPI";
 import LeyendaFlotante from "../components/LeyendaFlotante";
+import ModuloProximamente from "../components/ModuloProximamente";
+import '../styles/ModuloProximamente.css'
 import { MapPin, Filter } from 'lucide-react'
 
 export default function App() {
@@ -81,7 +83,7 @@ export default function App() {
         {modoRenderer === 'leaflet' ? (
           <Mapa capas={capas} onMapReady={() => {}} onClickMapa={setCoordenada} />
         ) : (
-          <MapaGeoLibre capas={capas} onMapReady={() => {}} onClickMapa={setCoordenada} />
+          <ModuloProximamente />
         )}
 
         <button
