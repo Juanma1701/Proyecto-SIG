@@ -1,15 +1,12 @@
 import { useState } from 'react'
 import Mapa from "../components/Mapa";
-import MapaGeoLibre from "../components/MapaGeoLibre";
 import CargarCapa from "../components/CargarCapa";
 import '../styles/Dashboard.css'
 import SeleccionarCapa from '../components/SeleccionarCapa';
 import CargarCapaAPI from "../components/CargarCapaAPI";
-import LeyendaFlotante from "../components/LeyendaFlotante";
 import ModuloProximamente from "../components/ModuloProximamente";
 import '../styles/ModuloProximamente.css'
-import { MapPin, Filter } from 'lucide-react'
-import { Filter, Layers } from 'lucide-react';
+import { Filter, Layers } from 'lucide-react'
 import MenuCapas from '../components/MenuCapas';
 import FiltroCategorias from '../components/FiltroCategorias';
 
