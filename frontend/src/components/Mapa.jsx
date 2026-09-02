@@ -4,6 +4,61 @@ import 'leaflet/dist/leaflet.css'
 import '../styles/Mapa.css'
 import { obtenerCategoria, estiloCategoria } from '../utils/categoriasEquipamiento'
 
+function obtenerCentroGeometria(geometry) {
+  if (!geometry) return null
+
+  if (geometry.type === 'Point') {
+    return [geometry.coordinates[1], geometry.coordinates[0]]
+  }
+
+  if (geometry.type === 'MultiPoint') {
+    const [lng, lat] = geometry.coordinates[0]
+    return [lat, lng]
+  }
+
+  if (geometry.type === 'LineString') {
+    const coords = geometry.coordinates
+    const promedio = coords.reduce((acc, [lng, lat]) => {
+      acc[0] += lat
+      acc[1] += lng
+      return acc
+    }, [0, 0])
+    return [promedio[0] / coords.length, promedio[1] / coords.length]
+  }
+
+  if (geometry.type === 'MultiLineString') {
+    const coords = geometry.coordinates.flat()
+    const promedio = coords.reduce((acc, [lng, lat]) => {
+      acc[0] += lat
+      acc[1] += lng
+      return acc
+    }, [0, 0])
+    return [promedio[0] / coords.length, promedio[1] / coords.length]
+  }
+
+  if (geometry.type === 'Polygon') {
+    const coords = geometry.coordinates.flat()
+    const promedio = coords.reduce((acc, [lng, lat]) => {
+      acc[0] += lat
+      acc[1] += lng
+      return acc
+    }, [0, 0])
+    return [promedio[0] / coords.length, promedio[1] / coords.length]
+  }
+
+  if (geometry.type === 'MultiPolygon') {
+    const coords = geometry.coordinates.flat(2)
+    const promedio = coords.reduce((acc, [lng, lat]) => {
+      acc[0] += lat
+      acc[1] += lng
+      return acc
+    }, [0, 0])
+    return [promedio[0] / coords.length, promedio[1] / coords.length]
+  }
+
+  return null
+}
+
 export default function Mapa({ capas, onMapReady, onClickMapa }) {
   const mapRef = useRef(null)
   const contenedorRef = useRef(null)
@@ -63,39 +118,81 @@ export default function Mapa({ capas, onMapReady, onClickMapa }) {
 
     // Agregar o actualizar cada capa
     capas.forEach(capa => {
-      const esEquipamiento = capa.crs?.fuente === 'API ArcGIS REST (AMVA)'
+      if (capa.esZonaVisual === true || capa.tipo === 'zona') {
+        const existing = capasLeafletRef.current[capa.id]
 
-      const opcionesEstilo = esEquipamiento ? {
-        style: (feature) => {
-          const cat = obtenerCategoria(feature)
-          const { color } = estiloCategoria(cat)
-          return { color, weight: 2, fillColor: color, fillOpacity: 0.45 }
-        },
-        pointToLayer: (feature, latlng) => {
-          const cat = obtenerCategoria(feature)
-          const { color } = estiloCategoria(cat)
-          return L.circleMarker(latlng, { radius: 6, color, fillColor: color, fillOpacity: 0.85, weight: 1 })
+        if (existing) {
+          mapa.removeLayer(existing)
+          delete capasLeafletRef.current[capa.id]
         }
-      } : {}
 
-      if (capasLeafletRef.current[capa.id]) {
-        // Ya existe: actualiza los datos (por ejemplo, tras reproyectar o filtrar)
-        capasLeafletRef.current[capa.id].clearLayers()
-        capasLeafletRef.current[capa.id].addData(capa.geojson)
-      } else {
-        // No existe: créala y agrégala
-        const layer = L.geoJSON(capa.geojson, opcionesEstilo).addTo(mapa)
+        const layer = L.circle([capa.centro.lat, capa.centro.lng], {
+          radius: capa.radioKm * 1000,
+          color: capa.color || '#2563eb',
+          weight: 2,
+          fillColor: '#60a5fa',
+          fillOpacity: 0.18,
+          dashArray: '8 8'
+        }).addTo(mapa)
+
         capasLeafletRef.current[capa.id] = layer
 
-        // Solo hace zoom automático cuando se agrega la primera capa nueva
-        try {
-          mapa.fitBounds(layer.getBounds())
-        } catch {
-          // getBounds puede fallar si la capa está vacía; lo ignoramos
+        if (capa.visible) {
+          if (!mapa.hasLayer(layer)) mapa.addLayer(layer)
+        } else if (mapa.hasLayer(layer)) {
+          mapa.removeLayer(layer)
         }
+        return
       }
 
-      // Mostrar/ocultar según el checkbox
+      if (capasLeafletRef.current[capa.id]) {
+        capasLeafletRef.current[capa.id].clearLayers()
+      }
+
+      const hiddenCategories = new Set(capa.hiddenCategories || [])
+      const features = (capa.geojson?.features || []).filter((feature) => {
+        const cat = obtenerCategoria(feature)
+        return !hiddenCategories.has(cat)
+      })
+      const markers = L.layerGroup()
+
+      features.forEach((feature) => {
+        const centro = obtenerCentroGeometria(feature.geometry)
+        if (!centro) return
+
+        const cat = obtenerCategoria(feature)
+        const { color, etiqueta } = estiloCategoria(cat)
+        const marcador = L.circleMarker([centro[0], centro[1]], {
+          radius: 6,
+          color: '#ffffff',
+          fillColor: color,
+          fillOpacity: 0.95,
+          weight: 1.2
+        })
+
+        marcador.bindTooltip(etiqueta, {
+          direction: 'top',
+          opacity: 0.9
+        })
+        markers.addLayer(marcador)
+      })
+
+      markers.addTo(mapa)
+      capasLeafletRef.current[capa.id] = markers
+
+      try {
+        const bounds = features
+          .map((feature) => obtenerCentroGeometria(feature.geometry))
+          .filter(Boolean)
+          .map(([lat, lng]) => [lat, lng])
+
+        if (bounds.length > 0) {
+          mapa.fitBounds(bounds)
+        }
+      } catch {
+        // Ignorado si la capa está vacía o no tiene geometría válida
+      }
+
       const layer = capasLeafletRef.current[capa.id]
       if (capa.visible) {
         if (!mapa.hasLayer(layer)) mapa.addLayer(layer)

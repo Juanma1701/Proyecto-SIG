@@ -1,20 +1,21 @@
 import { useState } from 'react'
 import FiltroCategorias from './FiltroCategorias'
 import '../styles/LeyendaFlotante.css'
+import {Pin} from 'lucide-react'
 
 export default function LeyendaFlotante({ capas, setCapas }) {
   const [colapsada, setColapsada] = useState(false)
 
-  console.log('Capas recibidas en LeyendaFlotante:', capas.map(c => ({ nombre: c.nombre, fuente: c.crs?.fuente, visible: c.visible })))
+  const capaEquipamiento = capas.find(c =>
+    c.crs?.fuente?.includes('API ArcGIS REST (AMVA)') && c.visible
+  )
 
-  const capaEquipamiento = capas.find(c => c.crs?.fuente === 'API ArcGIS REST (AMVA)' && c.visible)
-
-  if (!capaEquipamiento) return null
+  if (!capaEquipamiento || !capaEquipamiento.geojson?.features?.length) return null
 
   return (
     <div className={`leyenda-flotante ${colapsada ? 'leyenda-flotante--colapsada' : ''}`}>
       <div className="leyenda-flotante__header" onClick={() => setColapsada(!colapsada)}>
-        <span>📍 {capaEquipamiento.nombre}</span>
+        <span><Pin size={16} /> {capaEquipamiento.nombre}</span>
         <span>{colapsada ? '▸' : '▾'}</span>
       </div>
       {!colapsada && (
