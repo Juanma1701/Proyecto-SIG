@@ -57,6 +57,11 @@
   top: auto;
   bottom: 16px;
   z-index: 1100;
+  transition: right 0.2s ease;
+}
+
+.menu-layers--filtros-desplazado {
+  right: 348px;
 }
 
 .btn-toggle-filtros {

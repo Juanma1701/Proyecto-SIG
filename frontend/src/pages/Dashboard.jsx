@@ -1,11 +1,9 @@
 import { useState } from 'react'
 import Mapa from "../components/Mapa";
-import MapaGeoLibre from "../components/MapaGeoLibre";
 import CargarCapa from "../components/CargarCapa";
 import '../styles/Dashboard.css'
 import SeleccionarCapa from '../components/SeleccionarCapa';
 import CargarCapaAPI from "../components/CargarCapaAPI";
-import LeyendaFlotante from "../components/LeyendaFlotante";
 import ModuloProximamente from "../components/ModuloProximamente";
 import '../styles/ModuloProximamente.css'
 import { MapPin, Filter, Layers } from 'lucide-react'
@@ -98,7 +96,7 @@ export default function App() {
         )}
       </div>
 
-      <div className='menu-layers menu-layers--filtros'>
+      <div className={`menu-layers menu-layers--filtros ${activadoCapa ? 'menu-layers--filtros-desplazado' : ''}`}>
         {filtrosAbiertos && (
           <FiltroCategorias
             capa={capaEquipamiento}
