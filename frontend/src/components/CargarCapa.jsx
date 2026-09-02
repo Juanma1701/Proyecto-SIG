@@ -5,7 +5,7 @@ import { detectarCRS } from '../utils/detectarCRS'
 import { guardarCapaEnSupabase } from '../utils/guardarcapa'
 import { toast } from 'sonner'
 import '../styles/CargarCapa.css'
-
+import {File, Folder, MapPlus } from 'lucide-react'
 export default function CargarCapa({ capas, setCapas }) {
   const [cargando, setCargando] = useState(false)
   const [guardando, setGuardando] = useState(null)
@@ -119,9 +119,9 @@ export default function CargarCapa({ capas, setCapas }) {
         <p className="dropzone-titulo">Cargar capa</p>
         <p className="dropzone-subtitulo">Arrastra archivos o haz clic para elegir</p>
         <div className="dropzone-formatos">
-          <span>📄 .geojson</span>
-          <span>📁 .zip</span>
-          <span>🗺️ .kml</span>
+          <span><File />.geojson</span>
+          <span><Folder />.zip</span>
+          <span><MapPlus /> .kml</span>
         </div>
         <input
           type="file"

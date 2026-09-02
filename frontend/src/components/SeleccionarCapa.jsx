@@ -1,28 +1,23 @@
 import { useState, useEffect } from 'react'
 import '../styles/SeleccionarCapa.css'
-import {Map} from 'lucide-react'
+import { Map } from 'lucide-react'
+import { toast } from 'sonner'
+import { capaDesdeZona } from '../utils/capaDesdeZona'
 
-function crearZonaGeoJSON(latitud, longitud, radioKm) {
-    const puntos = []
-    const gradosPorKm = 1 / 111.32
-    const radioLatitud = radioKm * gradosPorKm
-    const radioLongitud = radioLatitud / Math.cos((latitud * Math.PI) / 180)
-
-    for (let indice = 0; indice <= 64; indice += 1) {
-        const angulo = (indice / 64) * Math.PI * 2
-        puntos.push([
-            longitud + Math.cos(angulo) * radioLongitud,
-            latitud + Math.sin(angulo) * radioLatitud
-        ])
-    }
-
+function crearZonaBusqueda(latitud, longitud, radioKm) {
     return {
-        type: 'FeatureCollection',
-        features: [{
-            type: 'Feature',
-            properties: { radioKm },
-            geometry: { type: 'Polygon', coordinates: [puntos] }
-        }]
+        id: crypto.randomUUID(),
+        nombre: `Zona de ${radioKm} km (${latitud}, ${longitud})`,
+        archivoOriginal: null,
+        tipo: 'zona',
+        centro: { lat: latitud, lng: longitud },
+        radioKm,
+        geojson: null,
+        crs: { epsg: 4326, fuente: 'zona de busqueda' },
+        visible: true,
+        guardadaEnNube: false,
+        esZonaVisual: true,
+        color: '#2563eb'
     }
 }
 
@@ -30,6 +25,7 @@ function SeleccionarCapa({ setCapas, captura }) {
     const [latitud, setLatitud] = useState('6.25')
     const [longitud, setLongitud] = useState('-75.56')
     const [radioKm, setRadioKm] = useState('2')
+    const [cargando, setCargando] = useState(false)
 
     useEffect(() => {
         if (captura) {
@@ -38,7 +34,7 @@ function SeleccionarCapa({ setCapas, captura }) {
         }
     }, [captura])
 
-    function manejarCrearZona(evento) {
+    async function manejarCrearZona(evento) {
         evento.preventDefault()
 
         const latitudNumero = Number(latitud)
@@ -49,17 +45,22 @@ function SeleccionarCapa({ setCapas, captura }) {
         if (!Number.isFinite(longitudNumero) || longitudNumero < -180 || longitudNumero > 180) return
         if (!Number.isFinite(radioNumero) || radioNumero <= 0) return
 
-        const nuevaZona = {
-            id: crypto.randomUUID(),
-            nombre: `Zona de ${radioNumero} km (${latitudNumero}, ${longitudNumero})`,
-            archivoOriginal: null,
-            geojson: crearZonaGeoJSON(latitudNumero, longitudNumero, radioNumero),
-            crs: { epsg: 4326, fuente: 'zona generada por coordenadas' },
-            visible: true,
-            guardadaEnNube: false
-        }
-
+        const nuevaZona = crearZonaBusqueda(latitudNumero, longitudNumero, radioNumero)
         setCapas(prev => [...prev, nuevaZona])
+
+        setCargando(true)
+        try {
+            const centro = { lat: latitudNumero, lng: longitudNumero }
+            const capaEquipamientos = await capaDesdeZona(centro, radioNumero)
+            if (capaEquipamientos) {
+                setCapas(prev => [...prev, capaEquipamientos])
+            }
+        } catch (error) {
+            console.error(error)
+            toast.error('Error al consultar equipamientos del AMVA: ' + error.message)
+        } finally {
+            setCargando(false)
+        }
     }
 
     return (
@@ -68,6 +69,15 @@ function SeleccionarCapa({ setCapas, captura }) {
                 <h4>Mapear una zona <Map /></h4>
                 <p>Define un centro y un radio para crear una zona en el mapa.</p>
             </div>
+            {captura && (
+                <div className="capa-item">
+                    <p>Última coordenada capturada</p>
+                    <span className="dashboard__coordenada">
+                        Lat: {captura.lat.toFixed(6)}<br />
+                        Lng: {captura.lng.toFixed(6)}
+                    </span>
+                </div>
+            )}
             <form onSubmit={manejarCrearZona} className="zona-selector__formulario">
                 <label>
                     Latitud
@@ -81,7 +91,13 @@ function SeleccionarCapa({ setCapas, captura }) {
                     Radio (km)
                     <input type="number" min="0.1" step="any" value={radioKm} onChange={evento => setRadioKm(evento.target.value)} required />
                 </label>
-                <button type="submit">Crear zona</button>
+                <button type="submit" disabled={cargando}>
+                    {cargando ? (
+                        <><span className="spinner"></span>Consultando AMVA...</>
+                    ) : (
+                        'Crear zona'
+                    )}
+                </button>
             </form>
         </div>
     )
