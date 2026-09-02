@@ -1,24 +1,26 @@
 import { useState } from 'react'
 import Mapa from "../components/Mapa";
 import MapaGeoLibre from "../components/MapaGeoLibre";
-import PanelCapas from "../components/PanelCapas";
 import CargarCapa from "../components/CargarCapa";
 import '../styles/Dashboard.css'
 import SeleccionarCapa from '../components/SeleccionarCapa';
 import CargarCapaAPI from "../components/CargarCapaAPI";
-import LeyendaFlotante from "../components/LeyendaFlotante";
-import { MapPin, Filter } from 'lucide-react'
+import { Filter, Layers } from 'lucide-react';
+import MenuCapas from '../components/MenuCapas';
+import FiltroCategorias from '../components/FiltroCategorias';
 
 export default function App() {
   const [capas, setCapas] = useState([])
   const [coordenada, setCoordenada] = useState(null)
   const [modoRenderer, setModoRenderer] = useState('leaflet')
-  const [captura, setCaptura] = useState("")
   const [filtrosAbiertos, setFiltrosAbiertos] = useState(false)
+  const [activadoCapa, setActivoCapa] = useState(false)
 
-  const handleCaptureCoordenada = (lat, lng) => {
-    setCaptura({ lat, lng })
-  }
+  const capaEquipamiento = [...capas]
+    .reverse()
+    .find(c => (
+      c.origenAPI === true || c.crs?.fuente?.includes('AMVA ArcGIS REST')
+    ) && c.visible) ?? null
 
   return (
     <div className="dashboard">
@@ -52,32 +54,15 @@ export default function App() {
           <CargarCapaAPI capas={capas} setCapas={setCapas} />
         </div>
 
-        <div className="sidebar-section">
-          <h3>Capas cargadas</h3>
-          <PanelCapas capas={capas} setCapas={setCapas} />
-        </div>
-
-        {coordenada && (
-          <div className="capa-item">
-            <p>Última coordenada capturada</p>
-            <span className="dashboard__coordenada">
-              Lat: {coordenada.lat.toFixed(6)}<br />
-              Lng: {coordenada.lng.toFixed(6)}
-            </span>
-            <button className='btn-capture' onClick={() => handleCaptureCoordenada(coordenada.lat, coordenada.lng)}>
-              Capturar coordenada
-            </button>
-          </div>
-        )}
         <div className="capa-zone">
           <SeleccionarCapa 
             setCapas={setCapas}
-            captura={captura}
+            captura={coordenada}
           />
         </div>
       </aside>
 
-      <div className="dashboard__mapa-contenedor">
+      <div className={`dashboard__mapa-contenedor ${activadoCapa ? 'dashboard__mapa-contenedor--menu-abierto' : ''}`}>
         {modoRenderer === 'leaflet' ? (
           <Mapa capas={capas} onMapReady={() => {}} onClickMapa={setCoordenada} />
         ) : (
@@ -91,11 +76,34 @@ export default function App() {
         >
           <Filter size={18} />
         </button>
+
+        <button
+          className={`btn-toggle-layer ${activadoCapa ? 'activo' : ''}`}
+          onClick={() => setActivoCapa(!activadoCapa)}
+          title="Capas"
+        >
+          <Layers size={18} />
+        </button>
       </div>
 
-      {filtrosAbiertos && (
-        <LeyendaFlotante capas={capas} setCapas={setCapas} />
-      )}
+      <div className='menu-layers'>
+        {activadoCapa && (
+          <MenuCapas
+            capas={capas}
+            setCapas={setCapas}
+          />
+        )}
+      </div>
+
+      <div className='menu-layers menu-layers--filtros'>
+        {filtrosAbiertos && (
+          <FiltroCategorias
+            capa={capaEquipamiento}
+            capas={capas}
+            setCapas={setCapas}
+          />
+        )}
+      </div>
     </div>
   )
 }

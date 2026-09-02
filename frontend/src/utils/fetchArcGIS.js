@@ -1,7 +1,7 @@
 // utils/fetchArcGIS.js
 // Descubrimiento dinámico: no hay tabla ni URL fija por municipio.
-// Se consulta el catálogo real del servidor ArcGIS del AMVA y se busca
-// el servicio + la capa por nombre.
+// Se consulta el catálogo real del servidor ArcGIS del AMVA y se listan
+// sus servicios y capas reales, sin adivinar por nombre ni por contenido.
 
 const AMVA_BASE = '/amva/server/rest/services'
 
@@ -40,17 +40,42 @@ export async function buscarServiciosPorMunicipio(nombreMunicipio) {
   )
 }
 
-// Busca dentro de un servicio la capa cuyo nombre coincide (parcial) con el buscado.
-// Devuelve el id numérico de la capa, o null si no está en ese servicio.
-export async function obtenerIdCapaPorNombre(nombreServicio, nombreCapaBuscada) {
+/**
+ * Lista TODAS las capas reales (con datos) de un servicio.
+ * Se descartan las "Group Layer": son carpetas contenedoras sin
+ * geometrías propias, y llamarles /query siempre falla con
+ * "Invalid or missing input parameters".
+ */
+export async function listarCapasDeServicio(nombreServicio) {
   const res = await fetch(`${AMVA_BASE}/${nombreServicio}/MapServer/layers?f=json`)
   if (!res.ok) throw new Error(`No se pudo listar las capas de ${nombreServicio}: ${res.status}`)
 
   const data = await res.json()
-  const clave = normalizar(nombreCapaBuscada)
-  const capa = data.layers?.find((l) => normalizar(l.name).includes(clave))
 
-  return capa ? capa.id : null
+  return (data.layers || [])
+    .filter((l) => l.type !== 'Group Layer')
+    .map((l) => ({ id: l.id, nombre: l.name, tipo: l.type }))
+}
+
+/**
+ * Dado un municipio, devuelve todos los servicios candidatos junto con
+ * sus capas reales (id + nombre), para que la UI arme el select con
+ * opciones que SÍ existen y SÍ tienen datos consultables.
+ */
+export async function listarCapasDisponiblesPorMunicipio(nombreMunicipio) {
+  const servicios = await buscarServiciosPorMunicipio(nombreMunicipio)
+  if (servicios.length === 0) {
+    throw new Error(`No se encontró ningún servicio del AMVA para "${nombreMunicipio}".`)
+  }
+
+  const resultados = await Promise.all(
+    servicios.map(async (s) => ({
+      servicio: s.name,
+      capas: await listarCapasDeServicio(s.name)
+    }))
+  )
+
+  return resultados
 }
 
 // Lee el sistema de coordenadas real de una capa en vez de asumirlo fijo (ej. 9377).
@@ -65,28 +90,15 @@ async function obtenerEpsgDeCapa(urlCapa) {
   )
 }
 
-// Función principal: dado un municipio, resuelve servicio + capa + EPSG
-// probando cada servicio candidato hasta encontrar uno que tenga la capa buscada.
-export async function resolverCapaPorMunicipio(nombreMunicipio, nombreCapa = 'Equipamientos Urbanos') {
-  const candidatos = await buscarServiciosPorMunicipio(nombreMunicipio)
-
-  if (candidatos.length === 0) {
-    throw new Error(`No se encontró ningún servicio del AMVA que contenga "${nombreMunicipio}" en el nombre.`)
-  }
-
-  for (const candidato of candidatos) {
-    const idCapa = await obtenerIdCapaPorNombre(candidato.name, nombreCapa)
-    if (idCapa !== null) {
-      const url = `${AMVA_BASE}/${candidato.name}/MapServer/${idCapa}`
-      const epsg = await obtenerEpsgDeCapa(url)
-      return { url, servicio: candidato.name, idCapa, epsg }
-    }
-  }
-
-  const nombresProbados = candidatos.map((c) => c.name).join(', ')
-  throw new Error(
-    `Ninguno de los servicios encontrados para "${nombreMunicipio}" (${nombresProbados}) tiene una capa llamada "${nombreCapa}".`
-  )
+/**
+ * Construye la URL final de una capa ya elegida (por el usuario en el
+ * select, o por código) y su EPSG. No valida "qué tan útil" es el
+ * contenido — esa decisión ahora es del usuario, no del código.
+ */
+export async function resolverCapaElegida(nombreServicio, idCapa) {
+  const url = `${AMVA_BASE}/${nombreServicio}/MapServer/${idCapa}`
+  const epsg = await obtenerEpsgDeCapa(url)
+  return { url, servicio: nombreServicio, idCapa, epsg }
 }
 
 // Consulta un servicio ArcGIS REST (FeatureServer/MapServer) y devuelve GeoJSON listo para usar
@@ -99,8 +111,28 @@ export async function fetchCapaArcGIS(urlBaseCapa) {
   const geojson = await res.json()
 
   if (geojson.error) {
-    throw new Error(geojson.error.message || 'El servicio devolvió un error')
+    console.error('[AMVA] error de ArcGIS', { url, error: geojson.error })
+    throw new Error(`${geojson.error.message || 'El servicio devolvió un error'} (capa: ${urlBaseCapa})`)
   }
 
   return geojson
+}
+
+/**
+ * Versión simple para "Mapear una zona" (capaDesdeZona.js): busca la
+ * primera capa cuyo nombre se parezca al buscado, sin heurísticas de
+ * contenido ni descartes por porcentaje de categorías.
+ */
+export async function resolverCapaPorMunicipio(nombreMunicipio, nombreCapaBuscada = 'Equipamientos Urbanos') {
+  const resultados = await listarCapasDisponiblesPorMunicipio(nombreMunicipio)
+  const clave = normalizar(nombreCapaBuscada)
+
+  for (const { servicio, capas } of resultados) {
+    const capa = capas.find((c) => normalizar(c.nombre).includes(clave) || clave.includes(normalizar(c.nombre)))
+    if (capa) {
+      return resolverCapaElegida(servicio, capa.id)
+    }
+  }
+
+  throw new Error(`No se encontró una capa parecida a "${nombreCapaBuscada}" para "${nombreMunicipio}".`)
 }

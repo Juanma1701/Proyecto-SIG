@@ -1,0 +1,48 @@
+.menu-capas {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 1000;
+  width: 320px;
+  max-height: calc(100vh - 32px);
+  background: rgba(18, 24, 32, 0.88);
+  border: 1px solid rgba(126, 200, 227, 0.25);
+  border-radius: 18px;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.38);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  overflow: hidden;
+}
+
+.menu-capas__header {
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.menu-capas__header h3 {
+  margin: 0;
+  font-size: 15px;
+  color: #edf6ff;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.menu-capas__content {
+  padding: 12px 12px 16px;
+  overflow-y: auto;
+  max-height: calc(100vh - 110px);
+}
+
+.menu-capas__content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.menu-capas__content::-webkit-scrollbar-thumb {
+  background: rgba(126, 200, 227, 0.35);
+  border-radius: 999px;
+}
+
+.menu-capas__content::-webkit-scrollbar-track {
+  background: transparent;
+}
