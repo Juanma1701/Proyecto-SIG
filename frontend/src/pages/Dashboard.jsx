@@ -96,7 +96,7 @@ export default function App() {
         )}
       </div>
 
-      <div className='menu-layers menu-layers--filtros'>
+      <div className={`menu-layers menu-layers--filtros ${activadoCapa ? 'menu-layers--filtros-desplazado' : ''}`}>
         {filtrosAbiertos && (
           <FiltroCategorias
             capa={capaEquipamiento}
