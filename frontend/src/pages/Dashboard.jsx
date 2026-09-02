@@ -6,7 +6,7 @@ import SeleccionarCapa from '../components/SeleccionarCapa';
 import CargarCapaAPI from "../components/CargarCapaAPI";
 import ModuloProximamente from "../components/ModuloProximamente";
 import '../styles/ModuloProximamente.css'
-import { Filter, Layers } from 'lucide-react'
+import { MapPin, Filter, Layers } from 'lucide-react'
 import MenuCapas from '../components/MenuCapas';
 import FiltroCategorias from '../components/FiltroCategorias';
 
