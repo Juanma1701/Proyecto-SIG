@@ -19,6 +19,12 @@
   background: rgba(30, 41, 59, 0.8);
 }
 
+.filtro-categorias-sidebar__acciones {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
 .filtro-categorias-sidebar__eyebrow {
   margin: 0 0 4px;
   font-size: 10px;

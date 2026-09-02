@@ -74,6 +74,28 @@ export default function FiltroCategorias({ capa, capas = [], setCapas }) {
     )
   }
 
+  function ocultarTodas() {
+    const todasOcultas = [...categorias]
+
+    setOcultasPorCapa((prev) => ({
+      ...prev,
+      [idCapaActiva]: todasOcultas
+    }))
+
+    setCapas(
+      capas.map((capaActual) =>
+        capaActual.id === capa.id
+          ? {
+              ...capaActual,
+              geojson: { ...geojsonBase, features: [] },
+              geojsonOriginal: geojsonBase,
+              hiddenCategories: todasOcultas
+            }
+          : capaActual
+      )
+    )
+  }
+
   return (
     <aside className="filtro-categorias-sidebar">
       <div className="filtro-categorias-sidebar__header">
@@ -82,13 +104,22 @@ export default function FiltroCategorias({ capa, capas = [], setCapas }) {
           <h3 className="filtro-categorias-sidebar__title">Filtrar categorías</h3>
         </div>
 
-        <button
-          type="button"
-          className="filtro-categorias-sidebar__boton"
-          onClick={mostrarTodas}
-        >
-          Ver todo
-        </button>
+        <div className="filtro-categorias-sidebar__acciones">
+          <button
+            type="button"
+            className="filtro-categorias-sidebar__boton"
+            onClick={mostrarTodas}
+          >
+            Ver todo
+          </button>
+          <button
+            type="button"
+            className="filtro-categorias-sidebar__boton"
+            onClick={ocultarTodas}
+          >
+            Desmarcar todo
+          </button>
+        </div>
       </div>
 
       <div className="filtro-categorias-sidebar__list">
