@@ -81,21 +81,6 @@ export default function CargarCapa({ capas, setCapas }) {
     }
   }
 
-  function manejarGenerarPrueba() {
-    const geojson = generarPuntosPrueba(5000)
-    const nuevaCapa = {
-      id: crypto.randomUUID(),
-      nombre: 'Prueba de rendimiento (5,000 puntos)',
-      archivoOriginal: null,
-      geojson,
-      crs: { epsg: 4326, fuente: 'generado localmente' },
-      visible: true,
-      guardadaEnNube: false
-    }
-    setCapas([...capas, nuevaCapa])
-    toast.success('5,000 puntos generados — compara los modos ahora')
-  }
-
   async function manejarGuardar(capa) {
     setGuardando(capa.id)
     try {
@@ -142,23 +127,19 @@ export default function CargarCapa({ capas, setCapas }) {
         </p>
       )}
 
-      {capas.map(capa => (
+      {capas.filter(capa => capa.archivoOriginal).map(capa => (
         <div key={capa.id} className="capa-item cargar-capa__item">
           <p>{capa.nombre}</p>
-          {capa.archivoOriginal ? (
-            !capa.guardadaEnNube ? (
-              <button onClick={() => manejarGuardar(capa)} disabled={guardando === capa.id}>
-                {guardando === capa.id ? (
-                  <><span className="spinner"></span>Guardando...</>
-                ) : (
-                  '☁️ Guardar en la nube'
-                )}
-              </button>
-            ) : (
-              <span className="cargar-capa__estado cargar-capa__estado--guardada">☁️ Guardada</span>
-            )
+          {!capa.guardadaEnNube ? (
+            <button onClick={() => manejarGuardar(capa)} disabled={guardando === capa.id}>
+              {guardando === capa.id ? (
+                <><span className="spinner"></span>Guardando...</>
+              ) : (
+                '☁️ Guardar en la nube'
+              )}
+            </button>
           ) : (
-            <span className="cargar-capa__estado cargar-capa__estado--local">⚡ Solo demo local</span>
+            <span className="cargar-capa__estado cargar-capa__estado--guardada">☁️ Guardada</span>
           )}
         </div>
       ))}

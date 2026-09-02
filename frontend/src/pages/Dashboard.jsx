@@ -8,8 +8,7 @@ import CargarCapaAPI from "../components/CargarCapaAPI";
 import LeyendaFlotante from "../components/LeyendaFlotante";
 import ModuloProximamente from "../components/ModuloProximamente";
 import '../styles/ModuloProximamente.css'
-import { MapPin, Filter } from 'lucide-react'
-import { Filter, Layers } from 'lucide-react';
+import { MapPin, Filter, Layers } from 'lucide-react'
 import MenuCapas from '../components/MenuCapas';
 import FiltroCategorias from '../components/FiltroCategorias';
 

@@ -13,6 +13,8 @@ function badgeInfo(geojson) {
   return { clase: '', texto: tipo || '—' }
 }
 
+const SISTEMAS_PROYECTADOS = [3115, 3116, 3117, 9377, 32618]
+
 export default function PanelCapas({ capas, setCapas }) {
   const [sridDestino, setSridDestino] = useState({})
   const [reproyectando, setReproyectando] = useState(null)
@@ -32,7 +34,15 @@ export default function PanelCapas({ capas, setCapas }) {
           ? { ...c, geojson: reproyectado, crs: { epsg: destino, fuente: 'reproyectado por el usuario' } }
           : c
       ))
-      toast.success(`Reproyectada a EPSG:${destino}`)
+
+      if (SISTEMAS_PROYECTADOS.includes(destino)) {
+        toast.warning(
+          `Reproyectada a EPSG:${destino} — el dato es correcto (coordenadas en metros), pero el mapa no puede visualizarlo directamente en este sistema. Reproyecta de nuevo a 4326 para verlo en pantalla.`,
+          { duration: 6000 }
+        )
+      } else {
+        toast.success(`Reproyectada a EPSG:${destino}`)
+      }
     } catch (error) {
       console.error(error)
       toast.error('No se pudo reproyectar: ' + error.message)
@@ -65,7 +75,8 @@ export default function PanelCapas({ capas, setCapas }) {
   })
 
   function renderCapa(capa) {
-    const badge = badgeInfo(capa.geojson)
+    const esZona = capa.esZonaVisual || capa.tipo === 'zona'
+    const badge = esZona ? { clase: '', texto: 'Zona' } : badgeInfo(capa.geojson)
 
     return (
       <div key={capa.id} className={`panel-capas__chip ${capa.visible ? '' : 'oculta'}`}>
@@ -92,18 +103,22 @@ export default function PanelCapas({ capas, setCapas }) {
         <div className="capa-chip-detalle">
           <InfoCRS crs={capa.crs} />
 
-          <input
-            placeholder="EPSG destino (ej: 3116)"
-            value={sridDestino[capa.id] || ''}
-            onChange={e => setSridDestino({ ...sridDestino, [capa.id]: e.target.value })}
-          />
-          <button onClick={() => manejarReproyeccion(capa)} disabled={reproyectando === capa.id}>
-            {reproyectando === capa.id ? (
-              <><span className="spinner"></span>Reproyectando...</>
-            ) : (
-              'Reproyectar'
-            )}
-          </button>
+          {!esZona && (
+            <>
+              <input
+                placeholder="EPSG destino (ej: 3116)"
+                value={sridDestino[capa.id] || ''}
+                onChange={e => setSridDestino({ ...sridDestino, [capa.id]: e.target.value })}
+              />
+              <button onClick={() => manejarReproyeccion(capa)} disabled={reproyectando === capa.id}>
+                {reproyectando === capa.id ? (
+                  <><span className="spinner"></span>Reproyectando...</>
+                ) : (
+                  'Reproyectar'
+                )}
+              </button>
+            </>
+          )}
         </div>
 
       </div>
