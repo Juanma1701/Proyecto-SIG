@@ -87,7 +87,9 @@ export async function capaDesdeZona(centro, radioKm, nombreCapaBuscada = 'Equipa
     })
 
     features.push(...filtrados)
-    municipiosConsultados.push(municipio.nombre)
+    if (filtrados.length > 0) {
+      municipiosConsultados.push(municipio.nombre)
+    }
   })
 
   if (municipiosConError.length > 0) {

@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import Mapa from "../components/Mapa";
-import CargarCapa from "../components/CargarCapa";
 import '../styles/Dashboard.css'
 import SeleccionarCapa from '../components/SeleccionarCapa';
 import CargarCapaAPI from "../components/CargarCapaAPI";
@@ -45,10 +44,6 @@ export default function App() {
               Alto rendimiento
             </button>
           </div>
-        </div>
-
-        <div className="sidebar-section">
-          <CargarCapa capas={capas} setCapas={setCapas} />
         </div>
 
         <div className="sidebar-section">
