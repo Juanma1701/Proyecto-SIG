@@ -1,0 +1,21 @@
+.dropzone-boton {
+  background: var(--color-acento);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  display: inline-block;
+  transition: background 0.2s;
+  border: none;
+  width: 100%;
+}
+
+.dropzone-boton:hover {
+  background: var(--color-acento-hover);
+}
+
+.dropzone-boton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

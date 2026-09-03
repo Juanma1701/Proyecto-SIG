@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { fetchCapaArcGIS, listarCapasDisponiblesPorMunicipio, resolverCapaElegida } from '../utils/fetchArcGIS'
 import { obtenerCategoria, estiloCategoria } from '../utils/categoriasEquipamiento'
+import '../styles/CargarCapaAPI.css'
 import { toast } from 'sonner'
 import { Globe } from 'lucide-react'
 
