@@ -3,7 +3,7 @@ import InfoCRS from './InfoCRS'
 import { reproyectarGeoJSON, asegurarDefinicionEPSG } from '../utils/reproyectar'
 import { toast } from 'sonner'
 import '../styles/PanelCapas.css'
-import { Trash2} from 'lucide-react'
+import { Trash2, Download } from 'lucide-react'
 
 function badgeInfo(geojson) {
   const tipo = geojson?.features?.[0]?.geometry?.type || geojson?.type || ''
@@ -11,6 +11,16 @@ function badgeInfo(geojson) {
   if (tipo.includes('Line')) return { clase: 'panel-capas__badge--line', texto: 'Línea' }
   if (tipo.includes('Polygon')) return { clase: 'panel-capas__badge--polygon', texto: 'Polígono' }
   return { clase: '', texto: tipo || '—' }
+}
+
+function descargarGeoJSON(geojson, nombreArchivo) {
+  const blob = new Blob([JSON.stringify(geojson)], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = nombreArchivo
+  a.click()
+  URL.revokeObjectURL(url)
 }
 
 const SISTEMAS_PROYECTADOS = [3115, 3116, 3117, 9377, 32618]
@@ -29,18 +39,34 @@ export default function PanelCapas({ capas, setCapas }) {
       await asegurarDefinicionEPSG(destino)
       const reproyectado = reproyectarGeoJSON(capa.geojson, capa.crs.epsg, destino)
 
-      setCapas(capas.map(c =>
-        c.id === capa.id
-          ? { ...c, geojson: reproyectado, crs: { epsg: destino, fuente: 'reproyectado por el usuario' } }
-          : c
-      ))
-
       if (SISTEMAS_PROYECTADOS.includes(destino)) {
+        // Sistema en metros: Leaflet no puede dibujar esas coordenadas
+        // (interpretaría los metros como grados y el mapa se rompe).
+        // Se guarda aparte, solo para exportar — el geojson que se
+        // dibuja en el mapa NO se toca.
+        setCapas(capas.map(c =>
+          c.id === capa.id
+            ? { ...c, geojsonReproyectado: reproyectado, crsReproyectado: { epsg: destino } }
+            : c
+        ))
         toast.warning(
-          `Reproyectada a EPSG:${destino} — el dato es correcto (coordenadas en metros), pero el mapa no puede visualizarlo directamente en este sistema. Reproyecta de nuevo a 4326 para verlo en pantalla.`,
+          `Reproyectada a EPSG:${destino} (metros). El mapa sigue mostrando la capa en su sistema original porque Leaflet solo dibuja en grados — usa "Descargar reproyectado" para exportar este resultado.`,
           { duration: 6000 }
         )
       } else {
+        // Sistema en grados (ej. de vuelta a 4326): sí se puede mostrar
+        // directamente en el mapa.
+        setCapas(capas.map(c =>
+          c.id === capa.id
+            ? {
+                ...c,
+                geojson: reproyectado,
+                crs: { epsg: destino, fuente: 'reproyectado por el usuario' },
+                geojsonReproyectado: null,
+                crsReproyectado: null,
+              }
+            : c
+        ))
         toast.success(`Reproyectada a EPSG:${destino}`)
       }
     } catch (error) {
@@ -117,6 +143,27 @@ export default function PanelCapas({ capas, setCapas }) {
                   'Reproyectar'
                 )}
               </button>
+              <button
+                className="panel-capas__boton-descarga"
+                onClick={() => descargarGeoJSON(
+                  capa.geojson,
+                  `${capa.nombre}_original_EPSG${capa.crs.epsg}.geojson`
+                )}
+              >
+                <Download size={14} /> Descargar original (EPSG:{capa.crs.epsg})
+              </button>
+
+              {capa.geojsonReproyectado && (
+                <button
+                  className="panel-capas__boton-descarga"
+                  onClick={() => descargarGeoJSON(
+                    capa.geojsonReproyectado,
+                    `${capa.nombre}_EPSG${capa.crsReproyectado.epsg}.geojson`
+                  )}
+                >
+                  <Download size={14} /> Descargar reproyectado (EPSG:{capa.crsReproyectado.epsg})
+                </button>
+              )}
             </>
           )}
         </div>
