@@ -72,3 +72,52 @@ export function obtenerCategoria(feature) {
 export function estiloCategoria(categoria) {
   return CATEGORIAS_EQUIPAMIENTO[categoria] || CATEGORIAS_EQUIPAMIENTO.DEFAULT
 }
+
+// Nombres de campo donde suele venir el nombre propio del equipamiento
+// (varía por municipio/servicio, igual que con la categoría — por eso
+// se prueban varios candidatos en orden de prioridad).
+const CAMPOS_NOMBRE = ['NMG', 'NOMBRE', 'NOMBRE_EQUIP', 'NOM_EQUIP', 'NOMBRE_SITIO', 'NOMBRE_INSTITUCION', 'NOM']
+
+// Nombres de campo donde suele venir la dirección.
+const CAMPOS_DIRECCION = ['DIRECCION', 'DIRECCCION', 'DIR']
+
+// Nombres de campo donde suele venir un teléfono de contacto.
+const CAMPOS_TELEFONO = ['NO_TELEFONO', 'TELEFONO', 'TEL']
+
+/**
+ * Busca en las properties de un feature el primer campo cuyo nombre
+ * (sin importar mayúsculas/minúsculas) coincida con alguno de los
+ * candidatos, y que además tenga un valor no vacío. Se usa tanto para
+ * el nombre como para la dirección y el teléfono.
+ */
+function buscarCampo(properties, candidatos) {
+  const claves = Object.keys(properties)
+  for (const candidato of candidatos) {
+    const clave = claves.find(k => k.toUpperCase() === candidato)
+    if (clave && properties[clave] !== null && properties[clave] !== undefined) {
+      const valor = String(properties[clave]).trim()
+      if (valor !== '') return valor
+    }
+  }
+  return null
+}
+
+/**
+ * Devuelve el nombre propio del equipamiento (ej. "Hospital General de
+ * Sabaneta") si el servicio del AMVA lo trae, o null si no se
+ * encontró ningún campo reconocible — en ese caso, la interfaz debe
+ * caer de vuelta a mostrar solo la categoría genérica.
+ */
+export function obtenerNombreEquipamiento(feature) {
+  return buscarCampo(feature?.properties || {}, CAMPOS_NOMBRE)
+}
+
+/** Devuelve la dirección del equipamiento, o null si no viene en el dato. */
+export function obtenerDireccionEquipamiento(feature) {
+  return buscarCampo(feature?.properties || {}, CAMPOS_DIRECCION)
+}
+
+/** Devuelve el teléfono del equipamiento, o null si no viene en el dato. */
+export function obtenerTelefonoEquipamiento(feature) {
+  return buscarCampo(feature?.properties || {}, CAMPOS_TELEFONO)
+}
