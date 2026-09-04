@@ -2,7 +2,13 @@ import { useEffect, useRef } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import '../styles/Mapa.css'
-import { obtenerCategoria, estiloCategoria } from '../utils/categoriasEquipamiento'
+import {
+  obtenerCategoria,
+  estiloCategoria,
+  obtenerNombreEquipamiento,
+  obtenerDireccionEquipamiento,
+  obtenerTelefonoEquipamiento,
+} from '../utils/categoriasEquipamiento'
 
 // Fix del ícono roto de Leaflet en el build de producción (Vite no resuelve
 // las rutas relativas que Leaflet arma internamente para sus PNG por defecto)
@@ -70,6 +76,19 @@ function obtenerCentroGeometria(geometry) {
   }
 
   return null
+}
+
+// Arma el HTML del popup que sale al hacer clic en un marcador.
+// Solo agrega las líneas de los datos que sí vienen en el feature.
+function construirPopupHtml({ nombre, etiqueta, direccion, telefono }) {
+  const filas = [
+    `<strong>${nombre || etiqueta}</strong>`,
+    nombre ? `<div class="equipamiento-popup__categoria">${etiqueta}</div>` : '',
+    direccion ? `<div class="equipamiento-popup__dato">📍 ${direccion}</div>` : '',
+    telefono ? `<div class="equipamiento-popup__dato">📞 ${telefono}</div>` : '',
+  ].filter(Boolean)
+
+  return `<div class="equipamiento-popup">${filas.join('')}</div>`
 }
 
 export default function Mapa({ capas, onMapReady, onClickMapa }) {
@@ -175,6 +194,10 @@ export default function Mapa({ capas, onMapReady, onClickMapa }) {
 
         const cat = obtenerCategoria(feature)
         const { color, etiqueta } = estiloCategoria(cat)
+        const nombre = obtenerNombreEquipamiento(feature)
+        const direccion = obtenerDireccionEquipamiento(feature)
+        const telefono = obtenerTelefonoEquipamiento(feature)
+
         const marcador = L.circleMarker([centro[0], centro[1]], {
           radius: 6,
           color: '#ffffff',
@@ -183,10 +206,15 @@ export default function Mapa({ capas, onMapReady, onClickMapa }) {
           weight: 1.2
         })
 
-        marcador.bindTooltip(etiqueta, {
+        // Al pasar el mouse: nombre real si existe, si no la categoría.
+        marcador.bindTooltip(nombre || etiqueta, {
           direction: 'top',
           opacity: 0.9
         })
+
+        // Al hacer clic: el detalle completo disponible.
+        marcador.bindPopup(construirPopupHtml({ nombre, etiqueta, direccion, telefono }))
+
         markers.addLayer(marcador)
       })
 
