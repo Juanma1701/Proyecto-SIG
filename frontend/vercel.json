@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/amva/:path*",
+      "destination": "https://portalidem.metropol.gov.co/:path*"
+    }
+  ]
+}
