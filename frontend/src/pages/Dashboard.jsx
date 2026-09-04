@@ -26,6 +26,7 @@ export default function App() {
     <div className="dashboard">
       <aside className="sidebar">
         <h2>Visor Geográfico</h2>
+        <title>Visor Geográfico</title>
         <p className="sidebar-subtitle">Carga, reproyecta y guarda capas SIG</p>
 
         <div className="sidebar-section">
