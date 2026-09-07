@@ -1,14 +1,8 @@
-// utils/fetchArcGIS.js
-// Descubrimiento dinámico: no hay tabla ni URL fija por municipio.
-// Se consulta el catálogo real del servidor ArcGIS del AMVA y se listan
-// sus servicios y capas reales, sin adivinar por nombre ni por contenido.
-
 const AMVA_BASE = '/amva/server/rest/services'
 
 let catalogoCache = null
 
-// Quita tildes, pasa a mayúsculas y normaliza espacios, para poder comparar
-// "Itagüí" con "ITAGUI_POT_EB" sin fallar por acentos/mayúsculas.
+
 function normalizar(texto) {
   return texto
     .normalize('NFD')
