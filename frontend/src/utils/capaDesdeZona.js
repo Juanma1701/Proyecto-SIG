@@ -1,4 +1,4 @@
-// src/utils/capaDesdeZona.js
+
 import { toast } from 'sonner'
 import { municipiosEnZona } from './municipiosValleAburra'
 import { filtrarPorZona } from './geoFiltros'
@@ -14,8 +14,8 @@ import { obtenerCategoria, estiloCategoria } from './categoriasEquipamiento'
  *
  * @param {{ lat: number, lng: number }} centro
  * @param {number} radioKm
- * @param {string} nombreCapaBuscada - nombre de la capa a buscar en cada servicio
- * @returns {Promise<object|null>} la nueva capa, o null si no hubo resultados
+ * @param {string} nombreCapaBuscada 
+ * @returns {Promise<object|null>} 
  */
 export async function capaDesdeZona(centro, radioKm, nombreCapaBuscada = 'Equipamientos Urbanos') {
   const municipios = municipiosEnZona(centro, radioKm)
@@ -80,7 +80,7 @@ export async function capaDesdeZona(centro, radioKm, nombreCapaBuscada = 'Equipa
           categoriaEtiqueta: estilo.etiqueta,
           categoriaColor: estilo.color,
           categoriaIcono: estilo.icono,
-          _epsgOriginal: epsg,   // metadato: CRS real reportado por el servicio de origen
+          _epsgOriginal: epsg,   
           _servicioArcGIS: servicio
         }
       }
