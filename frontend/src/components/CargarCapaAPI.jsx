@@ -12,12 +12,12 @@ const MUNICIPIOS_AMVA = [
 
 export default function CargarCapaAPI({ setCapas }) {
   const [municipio, setMunicipio] = useState(MUNICIPIOS_AMVA[0])
-  const [capasDisponibles, setCapasDisponibles] = useState([]) // [{ servicio, id, nombre }]
+  const [capasDisponibles, setCapasDisponibles] = useState([]) 
   const [capaSeleccionada, setCapaSeleccionada] = useState('')
   const [cargandoLista, setCargandoLista] = useState(false)
   const [cargandoDatos, setCargandoDatos] = useState(false)
 
-  // Cada vez que cambia el municipio, trae la lista REAL de capas de ese municipio
+  
   useEffect(() => {
     let cancelado = false
 
@@ -27,7 +27,6 @@ export default function CargarCapaAPI({ setCapas }) {
       setCapaSeleccionada('')
       try {
         const resultados = await listarCapasDisponiblesPorMunicipio(municipio)
-        // Aplana [{ servicio, capas: [{id, nombre}] }] a una sola lista
         const lista = resultados.flatMap(({ servicio, capas }) =>
           capas.map((c) => ({ servicio, id: c.id, nombre: c.nombre }))
         )
@@ -65,8 +64,6 @@ export default function CargarCapaAPI({ setCapas }) {
         return
       }
 
-      // Le agrega a cada feature su categoría/color/icono, útil para pintar
-      // en el mapa y para poder filtrar/ocultar por categoría después
       const featuresConCategoria = geojson.features.map((f) => {
         const categoria = obtenerCategoria(f)
         const estilo = estiloCategoria(categoria)
@@ -108,7 +105,7 @@ export default function CargarCapaAPI({ setCapas }) {
 
   return (
     <div className="sidebar-section">
-      <h3>Datos abiertos AMVA</h3>
+      <h3>Selecciona un municipio y la capa que deseas cargar</h3>
 
       <select
         value={municipio}

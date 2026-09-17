@@ -3,11 +3,12 @@ import Mapa from "../components/Mapa";
 import '../styles/Dashboard.css'
 import SeleccionarCapa from '../components/SeleccionarCapa';
 import CargarCapaAPI from "../components/CargarCapaAPI";
-import ModuloProximamente from "../components/ModuloProximamente";
 import '../styles/ModuloProximamente.css'
 import { Filter, Layers } from 'lucide-react'
 import MenuCapas from '../components/MenuCapas';
 import FiltroCategorias from '../components/FiltroCategorias';
+import CargarCapaArchivo from '../components/CargarGeoJSON';
+
 
 export default function App() {
   const [capas, setCapas] = useState([])
@@ -15,6 +16,7 @@ export default function App() {
   const [modoRenderer, setModoRenderer] = useState('leaflet')
   const [filtrosAbiertos, setFiltrosAbiertos] = useState(false)
   const [activadoCapa, setActivoCapa] = useState(false)
+
 
   const capaEquipamiento = [...capas]
     .reverse()
@@ -36,26 +38,35 @@ export default function App() {
               className={modoRenderer === 'leaflet' ? 'activo' : ''}
               onClick={() => setModoRenderer('leaflet')}
             >
-              Estándar
+              Selección Buffer
             </button>
             <button
-              className={modoRenderer === 'geolibre' ? 'activo' : ''}
-              onClick={() => setModoRenderer('geolibre')}
+              className={modoRenderer === 'GeoJSON' ? 'activo' : ''}
+              onClick={() => setModoRenderer('GeoJSON')}
             >
-              Alto rendimiento
+              Cargar GeoJSON
             </button>
           </div>
         </div>
 
-        <div className="sidebar-section">
-          <CargarCapaAPI capas={capas} setCapas={setCapas} />
-        </div>
-
-        <div className="capa-zone">
-          <SeleccionarCapa 
-            setCapas={setCapas}
-            captura={coordenada}
-          />
+        <div className='sidebar-type'>
+          {modoRenderer === 'GeoJSON' ? (
+            <div className="sidebar-section">
+              <CargarCapaArchivo capas={capas} setCapas={setCapas} />
+            </div>
+          ) : (
+            <>
+              <div className="sidebar-section">
+                <CargarCapaAPI capas={capas} setCapas={setCapas} />
+              </div>
+              <div className="capa-zone">
+                <SeleccionarCapa
+                  setCapas={setCapas}
+                  captura={coordenada}
+                />
+              </div>
+            </>
+          )}
         </div>
       </aside>
 
@@ -63,7 +74,7 @@ export default function App() {
         {modoRenderer === 'leaflet' ? (
           <Mapa capas={capas} onMapReady={() => {}} onClickMapa={setCoordenada} />
         ) : (
-          <ModuloProximamente />
+          <Mapa capas={capas} onMapReady={() => {}} onClickMapa={setCoordenada} />
         )}
 
         <button
