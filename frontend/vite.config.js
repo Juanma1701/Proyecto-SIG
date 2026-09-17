@@ -11,6 +11,12 @@ export default defineConfig({
         secure: true,
         rewrite: (path) => path.replace(/^\/amva/, ''),
       },
+      '/sim': {
+        target: 'https://sim.metropol.gov.co',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path.replace(/^\/sim/, ''),
+      },
     },
   },
 })

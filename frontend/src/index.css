@@ -152,3 +152,28 @@
 .toggle-renderer button:hover:not(.activo) {
   color: var(--color-texto);
 }
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    height: auto;
+    max-height: 42dvh;
+    padding: 16px;
+    gap: 16px;
+    border-right: none;
+    border-bottom: 1px solid var(--color-borde);
+  }
+
+  .sidebar h2 {
+    font-size: 20px;
+  }
+
+  .sidebar-subtitle {
+    margin-top: -10px;
+  }
+
+  .toggle-renderer button {
+    min-height: 42px;
+    padding: 8px 10px;
+  }
+}

@@ -3,6 +3,9 @@ import '../styles/SeleccionarCapa.css'
 import { MapPinned } from 'lucide-react'
 import { toast } from 'sonner'
 import { capaDesdeZona } from '../utils/capaDesdeZona'
+import { capaLugaresDesdeZona } from '../utils/capaLugaresDesdeZona'
+import { capaSueloDesdeZona } from '../utils/capaSueloDesdeZona'
+
 function crearZonaBusqueda(latitud, longitud, radioKm) {
     return {
         id: crypto.randomUUID(),
@@ -24,6 +27,7 @@ function SeleccionarCapa({ setCapas, captura }) {
     const [latitud, setLatitud] = useState('6.25')
     const [longitud, setLongitud] = useState('-75.56')
     const [radioKm, setRadioKm] = useState('2')
+    const [incluirSuelo, setIncluirSuelo] = useState(false)
     const [cargando, setCargando] = useState(false)
 
     useEffect(() => {
@@ -48,15 +52,36 @@ function SeleccionarCapa({ setCapas, captura }) {
         setCapas(prev => [...prev, nuevaZona])
 
         setCargando(true)
+        const centro = { lat: latitudNumero, lng: longitudNumero }
+
         try {
-            const centro = { lat: latitudNumero, lng: longitudNumero }
-            const capaEquipamientos = await capaDesdeZona(centro, radioNumero)
-            if (capaEquipamientos) {
-                setCapas(prev => [...prev, capaEquipamientos])
+            const tareas = [
+                capaDesdeZona(centro, radioNumero),
+                capaLugaresDesdeZona(centro, radioNumero)
+            ]
+            if (incluirSuelo) tareas.push(capaSueloDesdeZona(centro, radioNumero))
+
+            const resultados = await Promise.allSettled(tareas)
+
+            // Se etiqueta cada capa resultante con el id de la zona que la
+            // originó. Así, las estadísticas pueden sumar exactamente lo
+            // que le pertenece a esta zona sin tener que re-calcular
+            // distancias (que dependería de qué tan exacto sea el filtro
+            // interno de cada fuente de datos).
+            const nuevasCapas = resultados
+                .filter(r => r.status === 'fulfilled' && r.value)
+                .map(r => ({ ...r.value, zonaId: nuevaZona.id }))
+
+            if (nuevasCapas.length > 0) {
+                setCapas(prev => [...prev, ...nuevasCapas])
             }
-        } catch (error) {
-            console.error(error)
-            toast.error('Error al consultar equipamientos del AMVA: ' + error.message)
+
+            resultados.forEach(r => {
+                if (r.status === 'rejected') {
+                    console.error(r.reason)
+                    toast.error('Error al consultar: ' + r.reason.message)
+                }
+            })
         } finally {
             setCargando(false)
         }
@@ -90,9 +115,17 @@ function SeleccionarCapa({ setCapas, captura }) {
                     Radio (km)
                     <input type="number" min="0.1" step="any" value={radioKm} onChange={evento => setRadioKm(evento.target.value)} required />
                 </label>
+                <label className="zona-selector__checkbox">
+                    <input
+                        type="checkbox"
+                        checked={incluirSuelo}
+                        onChange={evento => setIncluirSuelo(evento.target.checked)}
+                    />
+                    Incluir uso de suelo / POT (experimental)
+                </label>
                 <button type="submit" disabled={cargando}>
                     {cargando ? (
-                        <><span className="spinner"></span>Consultando AMVA...</>
+                        <><span className="spinner"></span>Consultando...</>
                     ) : (
                         'Crear zona'
                     )}
