@@ -3,6 +3,10 @@
     {
       "source": "/amva/:path*",
       "destination": "https://portalidem.metropol.gov.co/:path*"
+    },
+    {
+      "source": "/sim/:path*",
+      "destination": "https://sim.metropol.gov.co/:path*"
     }
   ]
 }

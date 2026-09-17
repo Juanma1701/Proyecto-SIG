@@ -1,19 +1,19 @@
 import {School, Hospital, Siren, Church, Bus, Recycle, Drama, Warehouse, Trees, Landmark, Lightbulb, Scale, Pin, UsersRound } from 'lucide-react'
 export const CATEGORIAS_EQUIPAMIENTO = {
   'SALUD': { color: '#ef4444', icono: Hospital, etiqueta: 'Salud' },
-  'EDUCACION': { color: '#3b82f6', icono: School, etiqueta: 'Educación' },
-  'RECREACION': { color: '#22c55e', icono: Trees, etiqueta: 'Recreación' },
-  'CULTURA': { color: '#a855f7', icono: Drama, etiqueta: 'Cultura' },
+  'EDUCACION': { color: '#2563eb', icono: School, etiqueta: 'Educación' },
+  'RECREACION': { color: '#16a34a', icono: Trees, etiqueta: 'Recreación' },
+  'CULTURA': { color: '#7c3aed', icono: Drama, etiqueta: 'Cultura' },
   'CULTO': { color: '#f59e0b', icono: Church, etiqueta: 'Culto' },
-  'TRANSPORTE': { color: '#06b6d4', icono: Bus, etiqueta: 'Transporte' },
-  'SANITARIO': { color: '#84cc16', icono: Recycle, etiqueta: 'Sanitario' },
-  'FUERZA PUBLICA': { color: '#1e40af', icono: Siren, etiqueta: 'Fuerza pública' },
+  'TRANSPORTE': { color: '#0d9488', icono: Bus, etiqueta: 'Transporte' },
+  'SANITARIO': { color: '#65a30d', icono: Recycle, etiqueta: 'Sanitario' },
+  'FUERZA PUBLICA': { color: '#1e293b', icono: Siren, etiqueta: 'Fuerza pública' },
   'ALMACENAMIENTO DEL SECTOR PRIMARIO': { color: '#92400e', icono: Warehouse, etiqueta: 'Almacenamiento' },
-  'INSTITUCIONAL': { color: '#175cbd', icono: Landmark, etiqueta: 'Institucional' },
-  'BASICO COMUNITARIO': { color: '#0891b2', icono: UsersRound, etiqueta: 'Básico comunitario' },
-  'PREVENCION Y ATENCION DE DESASTRES': { color: '#dc2626', icono: Siren, etiqueta: 'Prevención de desastres' },
+  'INSTITUCIONAL': { color: '#be185d', icono: Landmark, etiqueta: 'Institucional' },
+  'BASICO COMUNITARIO': { color: '#78716c', icono: UsersRound, etiqueta: 'Básico comunitario' },
+  'PREVENCION Y ATENCION DE DESASTRES': { color: '#ea580c', icono: Siren, etiqueta: 'Prevención de desastres' },
   'SERVICIOS PUBLICOS': { color: '#eab308', icono: Lightbulb, etiqueta: 'Servicios públicos' },
-  'ADMINISTRACION DE JUSTICIA': { color: '#7c2d12', icono: Scale, etiqueta: 'Administración de justicia' },
+  'ADMINISTRACION DE JUSTICIA': { color: '#44403c', icono: Scale, etiqueta: 'Administración de justicia' },
   'DEFAULT': { color: '#94a3b8', icono: Pin, etiqueta: 'Sin categoría' }
 }
 
@@ -52,10 +52,14 @@ function normalizarTexto(valor) {
  * mucho de un municipio a otro.
  */
 export function obtenerCategoria(feature) {
+  // Si el feature ya trae categoría precalculada (AMVA en capaDesdeZona,
+  // o Overpass en capaLugaresDesdeZona), se respeta esa en vez de
+  // recalcularla por palabras clave — evita falsos positivos en
+  // features que no son de equipamientos AMVA.
+  if (feature?.properties?.categoria) return feature.properties.categoria
+
   const properties = feature?.properties || {}
 
-  // Junta todos los valores de texto del feature en un solo string
-  // para buscar palabras clave sin depender de saber el nombre exacto del campo.
   const textoCompleto = normalizarTexto(
     Object.values(properties).filter(v => typeof v === 'string' || typeof v === 'number').join(' ')
   )
@@ -83,6 +87,10 @@ const CAMPOS_DIRECCION = ['DIRECCION', 'DIRECCCION', 'DIR']
 
 // Nombres de campo donde suele venir un teléfono de contacto.
 const CAMPOS_TELEFONO = ['NO_TELEFONO', 'TELEFONO', 'TEL']
+
+// Nombres de campo donde puede venir un sitio web (Overpass sí lo trae,
+// el AMVA casi nunca).
+const CAMPOS_WEBSITE = ['WEBSITE', 'SITIO_WEB', 'URL', 'PAGINA_WEB']
 
 /**
  * Busca en las properties de un feature el primer campo cuyo nombre
@@ -120,4 +128,9 @@ export function obtenerDireccionEquipamiento(feature) {
 /** Devuelve el teléfono del equipamiento, o null si no viene en el dato. */
 export function obtenerTelefonoEquipamiento(feature) {
   return buscarCampo(feature?.properties || {}, CAMPOS_TELEFONO)
+}
+
+/** Devuelve el website del equipamiento si el dato lo trae, o null. */
+export function obtenerWebsiteEquipamiento(feature) {
+  return buscarCampo(feature?.properties || {}, CAMPOS_WEBSITE)
 }
