@@ -16,8 +16,7 @@ import {
 import { CATEGORIAS_LUGARES, estiloCategoriaLugar } from '../utils/categoriasLugares'
 import { buscarWebsitePorNombre } from '../utils/fetchOverpass'
 
-// Fix del ícono roto de Leaflet en el build de producción (Vite no resuelve
-// las rutas relativas que Leaflet arma internamente para sus PNG por defecto)
+
 import iconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png'
 import iconUrl from 'leaflet/dist/images/marker-icon.png'
 import shadowUrl from 'leaflet/dist/images/marker-shadow.png'
