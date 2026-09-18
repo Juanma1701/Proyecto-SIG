@@ -7,7 +7,14 @@
   background: var(--color-fondo);
   
 }
-
+.btn-profile{
+  border-radius: 50%;
+  width: 40px;
+  background: var(--color-acento);
+  color: #f4f2f5;
+  cursor: pointer;
+  border-style: none;
+}
 .btn-toggle-barra,
 .dashboard__overlay {
   display: none;
@@ -225,7 +232,7 @@
 .sidebar-header {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 17px;
   margin-bottom: 20px;
 }
 

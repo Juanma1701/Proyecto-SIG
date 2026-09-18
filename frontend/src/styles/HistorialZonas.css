@@ -4,20 +4,18 @@
   max-height: calc(100vh - 32px);
   display: flex;
   flex-direction: column;
-  background: rgba(18, 24, 32, 0.88);
-  border: 1px solid rgba(126, 200, 227, 0.25);
+  background: var(--color-fondo);
+  border: 1px solid var(--color-borde);
   border-radius: 18px;
-  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.38);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  color: #edf6ff;
+  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.14);
+  color: var(--color-texto);
 }
 
 .historial-zonas__header {
   border-radius: 18px 18px 0 0;
   padding: 14px 16px 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid var(--color-borde);
+  background: var(--color-tarjeta);
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -31,14 +29,14 @@
   align-items: center;
   gap: 4px;
   font-size: 10px;
-  color: #3ecf8e;
+  color: var(--color-exito);
   font-weight: 700;
 }
 
 .historial-zonas__title {
   margin: 0;
   font-size: 15px;
-  color: #edf6ff;
+  color: var(--color-texto);
   font-weight: 700;
   letter-spacing: 0.02em;
 }
@@ -53,11 +51,24 @@
   gap: 8px;
 }
 
+.historial-zonas__contenido::-webkit-scrollbar {
+  width: 8px;
+}
+
+.historial-zonas__contenido::-webkit-scrollbar-thumb {
+  background: var(--color-borde-hover);
+  border-radius: 999px;
+}
+
+.historial-zonas__contenido::-webkit-scrollbar-track {
+  background: transparent;
+}
+
 .historial-zonas__vacio {
   padding: 18px 12px;
-  border: 1px dashed rgba(126, 200, 227, 0.24);
+  border: 1px dashed var(--color-borde);
   border-radius: 12px;
-  color: rgba(237, 246, 255, 0.7);
+  color: var(--color-texto-secundario);
   font-size: 12px;
   text-align: center;
   line-height: 1.4;
@@ -70,17 +81,17 @@
   gap: 8px;
   padding: 10px 12px;
   border-radius: 12px;
-  background: rgba(27, 35, 48, 0.75);
-  border: 1px solid rgba(126, 200, 227, 0.16);
+  background: var(--color-tarjeta);
+  border: 1px solid var(--color-borde);
 }
 
 .historial-zonas__item.is-seleccionada {
-  border-color: rgba(62, 207, 142, 0.5);
-  background: rgba(62, 207, 142, 0.08);
+  border-color: rgba(34, 197, 94, 0.4);
+  background: rgba(34, 197, 94, 0.08);
 }
 
 .historial-zonas__item-checkbox input {
-  accent-color: #3ecf8e;
+  accent-color: var(--color-exito);
   width: 14px;
   height: 14px;
   cursor: pointer;
@@ -96,7 +107,7 @@
 .historial-zonas__item-nombre {
   font-size: 12px;
   font-weight: 600;
-  color: #edf6ff;
+  color: var(--color-texto);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -104,7 +115,7 @@
 
 .historial-zonas__item-fecha {
   font-size: 10px;
-  color: #9bb5d6;
+  color: var(--color-texto-secundario);
 }
 
 .historial-zonas__item-acciones {
@@ -117,32 +128,33 @@
   width: 28px;
   height: 28px;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.04);
-  color: #7ec8e3;
+  border: 1px solid var(--color-borde);
+  background: var(--color-fondo);
+  color: var(--color-acento);
   display: grid;
   place-items: center;
   cursor: pointer;
+  transition: background 0.15s ease;
 }
 
 .historial-zonas__item-acciones button:hover {
-  background: rgba(126, 200, 227, 0.14);
+  background: rgba(59, 130, 246, 0.1);
 }
 
 .historial-zonas__eliminar {
-  color: #f5c7c7 !important;
+  color: #ef4444 !important;
 }
 
 .historial-zonas__eliminar:hover {
-  background: rgba(255, 90, 90, 0.12) !important;
+  background: rgba(239, 68, 68, 0.1) !important;
 }
 
 .historial-zonas__comparacion {
   margin-top: 4px;
   padding: 12px;
   border-radius: 12px;
-  background: rgba(27, 35, 48, 0.9);
-  border: 1px solid rgba(62, 207, 142, 0.3);
+  background: var(--color-tarjeta);
+  border: 1px solid rgba(34, 197, 94, 0.3);
 }
 
 .historial-zonas__comparacion-header {
@@ -152,13 +164,13 @@
   gap: 6px;
   margin-bottom: 10px;
   padding-bottom: 8px;
-  border-bottom: 1px solid rgba(126, 200, 227, 0.18);
+  border-bottom: 1px solid var(--color-borde);
 }
 
 .historial-zonas__comparacion-nombre {
   font-size: 11px;
   font-weight: 700;
-  color: #edf6ff;
+  color: var(--color-texto);
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -171,7 +183,7 @@
 
 .historial-zonas__comparacion-vs {
   font-size: 9px;
-  color: #9bb5d6;
+  color: var(--color-texto-secundario);
   flex-shrink: 0;
 }
 
@@ -182,7 +194,7 @@
   gap: 8px;
   padding: 4px 0;
   font-size: 12px;
-  color: #edf6ff;
+  color: var(--color-texto);
 }
 
 .historial-zonas__comparacion-fila span:first-child {
@@ -197,14 +209,14 @@
 
 .historial-zonas__comparacion-fila--total {
   font-size: 14px;
-  color: #3ecf8e;
+  color: var(--color-exito);
   padding-bottom: 8px;
   margin-bottom: 4px;
-  border-bottom: 1px dashed rgba(126, 200, 227, 0.18);
+  border-bottom: 1px dashed var(--color-borde);
 }
 
 .historial-zonas__comparacion-etiqueta {
   font-size: 10px;
-  color: #9bb5d6;
+  color: var(--color-texto-secundario);
   text-align: center;
 }

@@ -4,13 +4,15 @@ import '../styles/Dashboard.css'
 import SeleccionarCapa from '../components/SeleccionarCapa';
 import CargarCapaAPI from "../components/CargarCapaAPI";
 import '../styles/ModuloProximamente.css'
-import { Filter, Layers, BarChart3, History, MapPinned, Sparkles } from 'lucide-react'
+import { Filter, Layers, BarChart3, History, MapPinned, Sparkles, UserRound } from 'lucide-react'
 import MenuCapas from '../components/MenuCapas';
 import FiltroCategorias from '../components/FiltroCategorias';
 import EstadisticasZona from '../components/EstadisticasZona';
 import AuthPanel from '../components/AuthPanel';
 import HistorialZonas from '../components/HistorialZonas';
 import CargarCapaArchivo from '../components/CargarGeoJSON';
+import BotonGuardarNube from '../components/BotonGuardarNube';
+
 
 export default function App() {
   const [capas, setCapas] = useState([])
@@ -20,6 +22,8 @@ export default function App() {
   const [activadoCapa, setActivoCapa] = useState(false)
   const [estadisticasAbiertas, setEstadisticasAbiertas] = useState(false)
   const [historialAbierto, setHistorialAbierto] = useState(false)
+  const [profileActive, setProfileActive] = useState(false)
+
   const mapaRef = useRef(null)
   const capaEquipamiento = [...capas]
     .reverse()
@@ -39,6 +43,9 @@ export default function App() {
     .reverse()
     .find(c => (c.esZonaVisual || c.tipo === 'zona') && c.visible) ?? null
 
+  const OpenProfile = () =>{
+    setProfileActive(!profileActive)
+  } 
   
 
 return (
@@ -54,10 +61,15 @@ return (
             <h2>GeoAburrá</h2>
             <p className="sidebar-subtitle">Carga, reproyecta y guarda capas SIG</p>
           </div>
+          <button className='btn-profile' onClick={OpenProfile}>
+            <UserRound />
+          </button>
         </div>
-
+        
         <div className="sidebar-section">
+          { profileActive && 
           <AuthPanel />
+          } 
         </div>
         
         <div className="sidebar-section">
@@ -84,6 +96,7 @@ return (
           {modoRenderer === 'GeoJSON' ? (
             <div className="sidebar-section">
               <CargarCapaArchivo capas={capas} setCapas={setCapas} />
+              <BotonGuardarNube capa={capas} setCapas={setCapas} />
             </div>
           ) : (
             <>

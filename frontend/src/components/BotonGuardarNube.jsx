@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { CloudUpload, Check } from 'lucide-react'
 import { guardarCapaEnNube } from '../utils/supabaseCapas'
-
+import '../styles/BotonGuardarNube.css'
 
 export default function BotonGuardarNube({ capa, setCapas }) {
   const [guardando, setGuardando] = useState(false)
@@ -49,7 +49,7 @@ export default function BotonGuardarNube({ capa, setCapas }) {
         </>
       ) : (
         <>
-          <CloudUpload size={12} /> <span>Guardar en la nube</span>
+          <CloudUpload size={20} /> <span>Guardar en la nube</span>
         </>
       )}
     </button>

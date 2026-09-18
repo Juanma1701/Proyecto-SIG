@@ -78,7 +78,7 @@ export default function HistorialZonas({ setCapas }) {
 
   useEffect(() => {
     recargar()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [user])
 
   function manejarCargar(fila) {
