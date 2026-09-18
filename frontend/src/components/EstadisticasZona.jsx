@@ -33,13 +33,7 @@ function nombreArchivo(zona, extension) {
   return `${base}.${extension}`
 }
 
-/**
- * `zona` es la capa de tipo 'zona' (círculo de búsqueda) actualmente
- * activa. `capas` es el array completo. `capaEquipamiento`/`capaLugares`
- * son las capas puntuales asociadas a esta zona. `mapaRef` apunta al
- * contenedor DOM real del mapa Leaflet, para poder capturarlo como
- * imagen al exportar.
- */
+
 export default function EstadisticasZona({ zona, capas = [], capaEquipamiento, capaLugares, mapaRef }) {
   const { user } = useAuth()
   const [guardando, setGuardando] = useState(false)
@@ -77,14 +71,12 @@ export default function EstadisticasZona({ zona, capas = [], capaEquipamiento, c
     }
   }
 
-  // Captura el mapa Leaflet tal como se ve en pantalla, pero con los
-  // clusters "desarmados" temporalmente (cada punto suelto) para que la
-  // foto sirva de verdad para ubicar qué hay en cada calle exacta.
+  
   async function capturarMapa() {
     if (!mapaRef?.current) return null
 
     const temporales = mapaRef.current.prepararCaptura()
-    // pequeña espera para que Leaflet termine de pintar los marcadores sueltos
+    
     await new Promise((resolve) => setTimeout(resolve, 300))
 
     try {
@@ -99,19 +91,13 @@ export default function EstadisticasZona({ zona, capas = [], capaEquipamiento, c
     }
   }
 
-  // Captura el panel de estadísticas COMPLETO, no solo la parte visible
-  // sin hacer scroll (html2canvas por defecto solo toma lo que cabe en
-  // pantalla si el contenedor tiene scroll interno).
+  
   async function capturarEstadisticas() {
     const el = contenidoRef.current
     const estiloOriginal = { maxHeight: el.style.maxHeight, overflow: el.style.overflow }
 
     el.style.maxHeight = 'none'
     el.style.overflow = 'visible'
-
-    // Se le da la altura REAL del contenido explícitamente — si no,
-    // html2canvas puede seguir usando el tamaño "encogido" de la caja
-    // flexible en vez de todo lo que realmente hay adentro.
     const alturaReal = el.scrollHeight
 
     try {
@@ -159,7 +145,6 @@ export default function EstadisticasZona({ zona, capas = [], capaEquipamiento, c
       const margen = 40
       let y = 50
 
-      // --- Encabezado / contexto en texto real, no solo imagen ---
       pdf.setFontSize(16)
       pdf.text(`Informe de zona: ${zona.nombre}`, margen, y)
       y += 20
@@ -179,15 +164,12 @@ export default function EstadisticasZona({ zona, capas = [], capaEquipamiento, c
       y += 24
       pdf.setTextColor(0, 0, 0)
 
-      // --- Mapa ---
       const alturaPagina = pdf.internal.pageSize.getHeight()
 
       if (canvasMapa) {
         const anchoImg = anchoPagina - margen * 2
         const altoImg = (canvasMapa.height * anchoImg) / canvasMapa.width
 
-        // Si el mapa no cabe entero en lo que queda de página, empieza
-        // una página nueva en vez de cortarlo.
         if (y + altoImg > alturaPagina - margen) {
           pdf.addPage()
           y = margen
@@ -200,7 +182,6 @@ export default function EstadisticasZona({ zona, capas = [], capaEquipamiento, c
         y += altoImg + 20
       }
 
-      // --- Gráfica de estadísticas (nueva página si no cabe) ---
       const anchoImgStats = anchoPagina - margen * 2
       const altoImgStats = (canvasStats.height * anchoImgStats) / canvasStats.width
 
@@ -306,7 +287,7 @@ export default function EstadisticasZona({ zona, capas = [], capaEquipamiento, c
                 <YAxis
                   type="category"
                   dataKey="categoria"
-                  tick={{ fill: '#edf6ff', fontSize: 11 }}
+                  tick={{ fill: '#060606', fontSize: 11 }}
                   width={110}
                 />
                 <Tooltip
@@ -319,7 +300,7 @@ export default function EstadisticasZona({ zona, capas = [], capaEquipamiento, c
                   {datosGrafica.map((entrada, i) => (
                     <Cell key={`celda-${i}`} fill={entrada.color} />
                   ))}
-                  <LabelList dataKey="cantidad" position="right" fill="#edf6ff" fontSize={11} fontWeight={700} />
+                  <LabelList dataKey="cantidad" position="right" fill="#09090a" fontSize={11} fontWeight={700} />
                 </Bar>
               </BarChart>
             </ResponsiveContainer>

@@ -89,6 +89,14 @@ export default function CargarCapaArchivo({ capas, setCapas }) {
 
   return (
     <div className="carga-archivo">
+      <div className="carga-archivo__encabezado">
+        <Upload size={16} />
+        <h3>Cargar archivo geográfico</h3>
+      </div>
+      <p className="carga-archivo__descripcion">
+        Sube un archivo con tus propios datos geoespaciales para visualizarlo en el mapa.
+      </p>
+
       <div
         className={`carga-archivo__dropzone ${arrastrando ? 'is-dragging' : ''} ${cargando ? 'is-loading' : ''}`}
         onClick={() => !cargando && inputRef.current?.click()}
@@ -112,7 +120,9 @@ export default function CargarCapaArchivo({ capas, setCapas }) {
           </>
         ) : (
           <>
-            <Upload size={32} strokeWidth={1.5} className="carga-archivo__icono" />
+            <div className="carga-archivo__icono-wrapper">
+              <Upload size={24} strokeWidth={1.8} className="carga-archivo__icono" />
+            </div>
             <p className="carga-archivo__texto-principal">
               Arrastra tu archivo aquí o <span>haz clic para elegir</span>
             </p>
@@ -125,13 +135,13 @@ export default function CargarCapaArchivo({ capas, setCapas }) {
 
       <div className="carga-archivo__formatos">
         <span className="carga-archivo__badge">
-          <FileJson size={14} /> GeoJSON
+          <FileJson size={13} /> GeoJSON
         </span>
         <span className="carga-archivo__badge">
-          <FileArchive size={14} /> Shapefile
+          <FileArchive size={13} /> Shapefile
         </span>
         <span className="carga-archivo__badge">
-          <MapPin size={14} /> KML
+          <MapPin size={13} /> KML
         </span>
       </div>
 

@@ -1,12 +1,10 @@
 .menu-capas {
   width: 320px;
   max-height: calc(100vh - 80px);
-  background: rgba(18, 24, 32, 0.88);
-  border: 1px solid rgba(126, 200, 227, 0.25);
+  background: var(--color-fondo);
+  border: 1px solid var(--color-borde);
   border-radius: 18px;
-  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.38);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.14);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -14,15 +12,15 @@
 
 .menu-capas__header {
   padding: 14px 16px 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid var(--color-borde);
+  background: var(--color-tarjeta);
   flex-shrink: 0;
 }
 
 .menu-capas__header h3 {
   margin: 0;
   font-size: 15px;
-  color: #edf6ff;
+  color: var(--color-texto);
   font-weight: 700;
   letter-spacing: 0.02em;
 }
@@ -39,7 +37,7 @@
 }
 
 .menu-capas__content::-webkit-scrollbar-thumb {
-  background: rgba(126, 200, 227, 0.35);
+  background: var(--color-borde-hover);
   border-radius: 999px;
 }
 

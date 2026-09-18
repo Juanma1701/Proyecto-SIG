@@ -1,56 +1,138 @@
 .zona-selector {
   margin-top: 18px;
-  padding: 14px;
-  background: rgba(59, 130, 246, 0.06);
+  padding: 16px;
+  background: rgba(59, 130, 246, 0.05);
   border: 1px solid var(--color-borde);
   border-radius: 12px;
 }
 
+.zona-selector__encabezado {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+
 .zona-selector__encabezado h4 {
-  margin: 0 0 6px;
-  color: #93c5fd;
+  margin: 0;
+  color: var(--color-acento);
   font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.zona-selector__encabezado h4 svg {
+  width: 16px;
+  height: 16px;
 }
 
 .zona-selector__encabezado p {
-  margin: 0 0 12px;
+  margin: 0;
   color: var(--color-texto-secundario);
   font-size: 12px;
   line-height: 1.4;
 }
 
+/* Tarjeta de última coordenada capturada */
+.zona-selector .capa-item {
+  background: var(--color-tarjeta);
+  border: 1px solid var(--color-borde);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  align-items: flex-start;
+}
+
+.zona-selector .capa-item p {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-texto-secundario);
+}
+
 .zona-selector__formulario {
   display: grid;
-  gap: 8px;
+  gap: 10px;
 }
 
 .zona-selector__formulario label {
   display: grid;
   gap: 4px;
-  color: #cbd5e1;
+  color: var(--color-texto-secundario);
   font-size: 12px;
+  font-weight: 500;
 }
 
-.zona-selector__formulario input {
+.zona-selector__formulario input[type="number"] {
   width: 100%;
   box-sizing: border-box;
-  padding: 7px 8px;
+  padding: 9px 10px;
   border: 1px solid var(--color-borde);
-  border-radius: 6px;
+  border-radius: 8px;
   color: var(--color-texto);
-  background: #16202e;
+  background: var(--color-fondo);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.zona-selector__formulario input[type="number"]:focus {
+  border-color: var(--color-acento);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+/* Fila de doble columna: Latitud / Longitud */
+.zona-selector__fila {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.zona-selector__checkbox {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--color-texto-secundario);
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.zona-selector__checkbox input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--color-acento);
+  cursor: pointer;
 }
 
 .zona-selector__formulario button {
   margin-top: 4px;
-  padding: 8px 12px;
+  padding: 10px 14px;
   border: 0;
-  border-radius: 6px;
+  border-radius: 8px;
   color: white;
   background: var(--color-acento);
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 0.15s ease;
 }
 
-.zona-selector__formulario button:hover {
+.zona-selector__formulario button:hover:not(:disabled) {
   background: var(--color-acento-hover);
+}
+
+.zona-selector__formulario button:disabled {
+  background: var(--color-borde);
+  color: var(--color-texto-secundario);
+  cursor: not-allowed;
 }

@@ -2,15 +2,15 @@
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 :root {
-  --color-fondo: #1c2431;
-  --color-tarjeta: #242e3d;
-  --color-borde: #34404f;
-  --color-borde-hover: #3f4c5e;
-  --color-texto: #e2e8f0;
-  --color-texto-secundario: #9aa8bc;
+  --color-fondo: #eef1f5;
+  --color-tarjeta: #f7f8fa;
+  --color-borde: #dde2e8;
+  --color-borde-hover: #c7cdd6;
+  --color-texto: #263140;
+  --color-texto-secundario: #6b7684;
   --color-acento: #3b82f6;
   --color-acento-hover: #2563eb;
-  --color-exito: #3b82f6;
+  --color-exito: #22c55e;
 }
 
 .sidebar {

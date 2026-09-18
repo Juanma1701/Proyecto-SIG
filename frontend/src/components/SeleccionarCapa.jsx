@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import '../styles/SeleccionarCapa.css'
-import { MapPinned } from 'lucide-react'
+import { MapPinned, Crosshair, Radius } from 'lucide-react'
 import { toast } from 'sonner'
 import { capaDesdeZona } from '../utils/capaDesdeZona'
 import { capaLugaresDesdeZona } from '../utils/capaLugaresDesdeZona'
@@ -26,7 +26,7 @@ function crearZonaBusqueda(latitud, longitud, radioKm) {
 function SeleccionarCapa({ setCapas, captura }) {
     const [latitud, setLatitud] = useState('6.25')
     const [longitud, setLongitud] = useState('-75.56')
-    const [radioKm, setRadioKm] = useState('2')
+    const [radioKm, setRadioKm] = useState('1')
     const [incluirSuelo, setIncluirSuelo] = useState(false)
     const [cargando, setCargando] = useState(false)
 
@@ -87,22 +87,25 @@ function SeleccionarCapa({ setCapas, captura }) {
         }
     }
 
-    return (
-        <div className="zona-selector">
-            <div className="zona-selector__encabezado">
-                <h4>Mapear una zona <MapPinned /></h4>
-                <p>Define un centro y un radio para crear una zona en el mapa.</p>
+   return (
+    <div className="zona-selector">
+        <div className="zona-selector__encabezado">
+            <h4><MapPinned /> Mapear una zona</h4>
+            <p>Define un centro y un radio para crear una zona en el mapa.</p>
+        </div>
+
+        {captura && (
+            <div className="capa-item">
+                <p>Última coordenada capturada</p>
+                <span className="dashboard__coordenada">
+                    Lat: {captura.lat.toFixed(6)}<br />
+                    Lng: {captura.lng.toFixed(6)}
+                </span>
             </div>
-            {captura && (
-                <div className="capa-item">
-                    <p>Última coordenada capturada</p>
-                    <span className="dashboard__coordenada">
-                        Lat: {captura.lat.toFixed(6)}<br />
-                        Lng: {captura.lng.toFixed(6)}
-                    </span>
-                </div>
-            )}
-            <form onSubmit={manejarCrearZona} className="zona-selector__formulario">
+        )}
+
+        <form onSubmit={manejarCrearZona} className="zona-selector__formulario">
+            <div className="zona-selector__fila">
                 <label>
                     Latitud
                     <input type="number" min="-90" max="90" step="any" value={latitud} onChange={evento => setLatitud(evento.target.value)} required />
@@ -111,27 +114,31 @@ function SeleccionarCapa({ setCapas, captura }) {
                     Longitud
                     <input type="number" min="-180" max="180" step="any" value={longitud} onChange={evento => setLongitud(evento.target.value)} required />
                 </label>
-                <label>
-                    Radio (km)
-                    <input type="number" min="0.1" step="any" value={radioKm} onChange={evento => setRadioKm(evento.target.value)} required />
-                </label>
-                <label className="zona-selector__checkbox">
-                    <input
-                        type="checkbox"
-                        checked={incluirSuelo}
-                        onChange={evento => setIncluirSuelo(evento.target.checked)}
-                    />
-                    Incluir uso de suelo / POT (experimental)
-                </label>
-                <button type="submit" disabled={cargando}>
-                    {cargando ? (
-                        <><span className="spinner"></span>Consultando...</>
-                    ) : (
-                        'Crear zona'
-                    )}
-                </button>
-            </form>
-        </div>
+            </div>
+
+            <label>
+                Radio (km)
+                <input type="number" min="0.1" step="any" value={radioKm} onChange={evento => setRadioKm(evento.target.value)} required />
+            </label>
+
+            <label className="zona-selector__checkbox">
+                <input
+                    type="checkbox"
+                    checked={incluirSuelo}
+                    onChange={evento => setIncluirSuelo(evento.target.checked)}
+                />
+                Incluir uso de suelo / POT (experimental)
+            </label>
+
+            <button type="submit" disabled={cargando}>
+                {cargando ? (
+                    <><span className="spinner"></span>Consultando...</>
+                ) : (
+                    <><Radius size={16} /> Crear zona</>
+                )}
+            </button>
+        </form>
+    </div>
     )
 }
 

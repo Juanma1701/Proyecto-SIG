@@ -4,12 +4,13 @@ import '../styles/Dashboard.css'
 import SeleccionarCapa from '../components/SeleccionarCapa';
 import CargarCapaAPI from "../components/CargarCapaAPI";
 import '../styles/ModuloProximamente.css'
-import { Filter, Layers, BarChart3, History } from 'lucide-react'
+import { Filter, Layers, BarChart3, History, MapPinned, Sparkles } from 'lucide-react'
 import MenuCapas from '../components/MenuCapas';
 import FiltroCategorias from '../components/FiltroCategorias';
 import EstadisticasZona from '../components/EstadisticasZona';
 import AuthPanel from '../components/AuthPanel';
 import HistorialZonas from '../components/HistorialZonas';
+import CargarCapaArchivo from '../components/CargarGeoJSON';
 
 export default function App() {
   const [capas, setCapas] = useState([])
@@ -20,8 +21,6 @@ export default function App() {
   const [estadisticasAbiertas, setEstadisticasAbiertas] = useState(false)
   const [historialAbierto, setHistorialAbierto] = useState(false)
   const mapaRef = useRef(null)
-
-
   const capaEquipamiento = [...capas]
     .reverse()
     .find(c => (
@@ -40,30 +39,42 @@ export default function App() {
     .reverse()
     .find(c => (c.esZonaVisual || c.tipo === 'zona') && c.visible) ?? null
 
-  return (
+  
+
+return (
     <div className="dashboard">
       <aside className="sidebar">
-        <h2>Visor Geográfico</h2>
-        <title>Visor Geográfico</title>
-        <p className="sidebar-subtitle">Carga, reproyecta y guarda capas SIG</p>
+        <title>GeoAburrá</title>
+
+        <div className="sidebar-header">
+          <div className="sidebar-header__icono">
+            <MapPinned size={22} />
+          </div>
+          <div>
+            <h2>GeoAburrá</h2>
+            <p className="sidebar-subtitle">Carga, reproyecta y guarda capas SIG</p>
+          </div>
+        </div>
 
         <div className="sidebar-section">
           <AuthPanel />
         </div>
-
+        
         <div className="sidebar-section">
-          <h3>Modo de visualización</h3>
+          <p className="sidebar-section__titulo">Modo de visualización</p>
           <div className="toggle-renderer">
             <button
               className={modoRenderer === 'leaflet' ? 'activo' : ''}
               onClick={() => setModoRenderer('leaflet')}
             >
+              <Sparkles size={14} />
               Selección Buffer
             </button>
             <button
               className={modoRenderer === 'GeoJSON' ? 'activo' : ''}
               onClick={() => setModoRenderer('GeoJSON')}
             >
+              <MapPinned size={14} />
               Cargar GeoJSON
             </button>
           </div>
@@ -97,10 +108,7 @@ export default function App() {
           <Mapa capas={capas} onMapReady={() => {}} onClickMapa={setCoordenada} />
         )}
 
-        {/* Cada botón vive en el mismo contenedor que su panel, apilados
-            verticalmente. Así el panel siempre nace pegado a su botón,
-            sin depender de cálculos manuales de "right"/"top" que se
-            desincronizan entre archivos CSS distintos. */}
+      
         <div className="controles-mapa">
           <div className="controles-mapa__grupo">
             <button
