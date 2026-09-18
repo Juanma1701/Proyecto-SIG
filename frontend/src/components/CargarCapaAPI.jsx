@@ -3,7 +3,7 @@ import { fetchCapaArcGIS, listarCapasDisponiblesPorMunicipio, resolverCapaElegid
 import { obtenerCategoria, estiloCategoria } from '../utils/categoriasEquipamiento'
 import '../styles/CargarCapaAPI.css'
 import { toast } from 'sonner'
-import { Globe } from 'lucide-react'
+import { Globe, MapPin, Layers, ChevronDown } from 'lucide-react'
 
 const MUNICIPIOS_AMVA = [
   'Barbosa', 'Girardota', 'Copacabana', 'Bello', 'Medellín',
@@ -11,14 +11,19 @@ const MUNICIPIOS_AMVA = [
 ]
 
 export default function CargarCapaAPI({ setCapas }) {
-  const [municipio, setMunicipio] = useState(MUNICIPIOS_AMVA[0])
-  const [capasDisponibles, setCapasDisponibles] = useState([]) 
+  const [municipio, setMunicipio] = useState('')
+  const [capasDisponibles, setCapasDisponibles] = useState([])
   const [capaSeleccionada, setCapaSeleccionada] = useState('')
   const [cargandoLista, setCargandoLista] = useState(false)
   const [cargandoDatos, setCargandoDatos] = useState(false)
 
-  
   useEffect(() => {
+    if (!municipio) {
+      setCapasDisponibles([])
+      setCapaSeleccionada('')
+      return
+    }
+
     let cancelado = false
 
     async function cargarListaCapas() {
@@ -30,12 +35,7 @@ export default function CargarCapaAPI({ setCapas }) {
         const lista = resultados.flatMap(({ servicio, capas }) =>
           capas.map((c) => ({ servicio, id: c.id, nombre: c.nombre }))
         )
-        if (!cancelado) {
-          setCapasDisponibles(lista)
-          if (lista.length > 0) {
-            setCapaSeleccionada(`${lista[0].servicio}::${lista[0].id}`)
-          }
-        }
+        if (!cancelado) setCapasDisponibles(lista)
       } catch (error) {
         console.error(error)
         if (!cancelado) toast.error('No se pudo listar capas: ' + error.message)
@@ -91,6 +91,7 @@ export default function CargarCapaAPI({ setCapas }) {
         crs: { epsg: epsg || null, fuente: `API ArcGIS REST (AMVA — ${servicio}/${idCapa})` },
         visible: true,
         guardadaEnNube: false,
+        origenAPI: true,
       }
 
       setCapas((prev) => [...prev, nuevaCapa])
@@ -104,46 +105,66 @@ export default function CargarCapaAPI({ setCapas }) {
   }
 
   return (
-    <div className="sidebar-section">
-      <h3>Selecciona un municipio y la capa que deseas cargar</h3>
+    <div className="sidebar-section capa-api">
+      <div className="capa-api__encabezado">
+        <Globe size={16} />
+        <h3>Datos abiertos del AMVA</h3>
+      </div>
+      <p className="capa-api__descripcion">
+        Selecciona un municipio y la capa que deseas cargar al visor.
+      </p>
 
-      <select
-        value={municipio}
-        onChange={(e) => setMunicipio(e.target.value)}
-        className="dropzone-boton"
-        style={{ display: 'block', width: '100%', marginBottom: 8 }}
-      >
-        {MUNICIPIOS_AMVA.map((m) => (
-          <option key={m} value={m}>{m}</option>
-        ))}
-      </select>
+      <div className="capa-api__campo">
+        <label><MapPin size={13} /> Municipio</label>
+        <div className="capa-api__select-wrapper">
+          <select
+            value={municipio}
+            onChange={(e) => setMunicipio(e.target.value)}
+          >
+            <option value="" disabled>Elige un municipio del Valle de Aburrá</option>
+            {MUNICIPIOS_AMVA.map((m) => (
+              <option key={m} value={m}>{m}</option>
+            ))}
+          </select>
+          <ChevronDown size={16} className="capa-api__select-icono" />
+        </div>
+      </div>
 
-      <select
-        value={capaSeleccionada}
-        onChange={(e) => setCapaSeleccionada(e.target.value)}
-        disabled={cargandoLista || capasDisponibles.length === 0}
-        className="dropzone-boton"
-        style={{ display: 'block', width: '100%', marginBottom: 8 }}
-      >
-        {cargandoLista && <option>Buscando capas...</option>}
-        {!cargandoLista && capasDisponibles.length === 0 && <option>No hay capas disponibles</option>}
-        {capasDisponibles.map((c) => (
-          <option key={`${c.servicio}::${c.id}`} value={`${c.servicio}::${c.id}`}>
-            {c.nombre} ({c.servicio})
-          </option>
-        ))}
-      </select>
+      <div className="capa-api__campo">
+        <label><Layers size={13} /> Capa geográfica</label>
+        <div className="capa-api__select-wrapper">
+          <select
+            value={capaSeleccionada}
+            onChange={(e) => setCapaSeleccionada(e.target.value)}
+            disabled={!municipio || cargandoLista || capasDisponibles.length === 0}
+          >
+            {!municipio && <option value="">Primero elige un municipio</option>}
+            {municipio && cargandoLista && <option value="">Buscando capas disponibles...</option>}
+            {municipio && !cargandoLista && capasDisponibles.length === 0 && (
+              <option value="">No hay capas disponibles</option>
+            )}
+            {municipio && !cargandoLista && capasDisponibles.length > 0 && (
+              <option value="" disabled>Elige la capa a cargar</option>
+            )}
+            {capasDisponibles.map((c) => (
+              <option key={`${c.servicio}::${c.id}`} value={`${c.servicio}::${c.id}`}>
+                {c.nombre} ({c.servicio})
+              </option>
+            ))}
+          </select>
+          <ChevronDown size={16} className="capa-api__select-icono" />
+        </div>
+      </div>
 
       <button
+        className="capa-api__boton"
         onClick={manejarCargar}
         disabled={cargandoDatos || cargandoLista || !capaSeleccionada}
-        className="dropzone-boton"
-        style={{ display: 'block', width: '100%', marginBottom: 8 }}
       >
         {cargandoDatos ? (
           <><span className="spinner"></span>Cargando datos...</>
         ) : (
-          <><Globe size={12} />  <span>Cargar capa</span></>
+          <><Globe size={15} /><span>Cargar capa al visor</span></>
         )}
       </button>
     </div>

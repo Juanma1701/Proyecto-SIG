@@ -1,22 +1,22 @@
 .info-crs {
   padding: 10px;
-  border: 1px solid #334155;
-  border-radius: 6px;
-  color: #e2e8f0;
-  background: #0f172a;
+  border: 1px solid var(--color-borde);
+  border-radius: 8px;
+  color: var(--color-texto);
+  background: var(--color-fondo);
   font-size: 13px;
 }
 
 .info-crs strong {
-  color: #f8fafc;
+  color: var(--color-texto);
 }
 
 .capa-item .info-crs p {
   margin: 6px 0 0;
-  color: #93c5fd;
+  color: var(--color-acento);
 }
 
 .info-crs__fuente {
-  color: #cbd5e1 !important;
+  color: var(--color-texto-secundario) !important;
   opacity: 1;
 }

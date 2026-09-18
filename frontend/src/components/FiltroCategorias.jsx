@@ -10,13 +10,6 @@ function estiloUnificado(categoria) {
   return estiloCategoria(categoria)
 }
 
-/**
- * `capa` (equipamientos AMVA), `capaLugares` (hoteles/moteles/bares de
- * Overpass) y `capaSuelo` (uso/clasificación del suelo POT) se combinan
- * en una sola lista de checkboxes, sin separarlos en secciones — cada
- * categoría sabe a qué capa pertenece internamente, pero visualmente
- * están todas al mismo nivel.
- */
 export default function FiltroCategorias({ capa, capaLugares, capaSuelo, capas = [], setCapas }) {
   const fuentes = useMemo(() => {
     return [capa, capaLugares, capaSuelo].filter((c) => {

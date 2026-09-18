@@ -40,10 +40,7 @@ export default function PanelCapas({ capas, setCapas }) {
       const reproyectado = reproyectarGeoJSON(capa.geojson, capa.crs.epsg, destino)
 
       if (SISTEMAS_PROYECTADOS.includes(destino)) {
-        // Sistema en metros: Leaflet no puede dibujar esas coordenadas
-        // (interpretaría los metros como grados y el mapa se rompe).
-        // Se guarda aparte, solo para exportar — el geojson que se
-        // dibuja en el mapa NO se toca.
+        
         setCapas(capas.map(c =>
           c.id === capa.id
             ? { ...c, geojsonReproyectado: reproyectado, crsReproyectado: { epsg: destino } }
@@ -54,8 +51,6 @@ export default function PanelCapas({ capas, setCapas }) {
           { duration: 6000 }
         )
       } else {
-        // Sistema en grados (ej. de vuelta a 4326): sí se puede mostrar
-        // directamente en el mapa.
         setCapas(capas.map(c =>
           c.id === capa.id
             ? {

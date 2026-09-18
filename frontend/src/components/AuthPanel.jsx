@@ -6,7 +6,7 @@ import '../styles/AuthPanel.css'
 
 export default function AuthPanel() {
   const { user, cargando, iniciarSesion, registrarse, cerrarSesion } = useAuth()
-  const [modo, setModo] = useState('login') // 'login' | 'registro'
+  const [modo, setModo] = useState('login') 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [enviando, setEnviando] = useState(false)

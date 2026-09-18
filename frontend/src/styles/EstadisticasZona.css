@@ -4,20 +4,18 @@
   max-height: calc(100vh - 32px);
   display: flex;
   flex-direction: column;
-  background: rgba(18, 24, 32, 0.88);
-  border: 1px solid rgba(126, 200, 227, 0.25);
+  background: var(--color-fondo);
+  border: 1px solid var(--color-borde);
   border-radius: 18px;
-  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.38);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  color: #edf6ff;
+  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.14);
+  color: var(--color-texto);
 }
 
 .estadisticas-zona__header {
   border-radius: 18px 18px 0 0;
   padding: 14px 16px 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid var(--color-borde);
+  background: var(--color-tarjeta);
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -28,7 +26,7 @@
 .estadisticas-zona__title {
   margin: 0;
   font-size: 15px;
-  color: #edf6ff;
+  color: #0c0c0e
   font-weight: 700;
   letter-spacing: 0.02em;
 }
@@ -46,14 +44,14 @@
   width: 26px;
   height: 26px;
   border-radius: 8px;
-  border: 1px solid rgba(126, 200, 227, 0.2);
-  background: rgba(27, 35, 48, 0.75);
-  color: #7ec8e3;
+  border: 1px solid var(--color-borde);
+  background: var(--color-fondo);
+  color: var(--color-acento);
   cursor: pointer;
 }
 
 .estadisticas-zona__boton-icono:hover {
-  background: rgba(126, 200, 227, 0.14);
+  background: rgba(59, 130, 246, 0.08);
 }
 
 .estadisticas-zona__boton-icono:disabled {
@@ -66,8 +64,8 @@
   align-items: center;
   gap: 5px;
   flex-shrink: 0;
-  background: linear-gradient(135deg, #3ecf8e, #2bbd7d);
-  color: #0d1b14;
+  background: var(--color-exito);
+  color: #ffffff;
   border: none;
   padding: 6px 10px;
   border-radius: 8px;
@@ -77,8 +75,8 @@
 }
 
 .estadisticas-zona__guardar:disabled {
-  background: #2a3340;
-  color: #8fa3b8;
+  background: var(--color-borde);
+  color: var(--color-texto-secundario);
   cursor: not-allowed;
 }
 
@@ -95,7 +93,7 @@
 }
 
 .estadisticas-zona__contenido::-webkit-scrollbar-thumb {
-  background: rgba(126, 200, 227, 0.35);
+  background: var(--color-borde-hover);
   border-radius: 999px;
 }
 
@@ -105,9 +103,9 @@
 
 .estadisticas-zona__vacio {
   padding: 18px 12px;
-  border: 1px dashed rgba(126, 200, 227, 0.24);
+  border: 1px dashed var(--color-borde);
   border-radius: 12px;
-  color: rgba(237, 246, 255, 0.7);
+  color: var(--color-texto-secundario);
   font-size: 13px;
   text-align: center;
 }
@@ -118,17 +116,17 @@
   gap: 2px;
   margin-bottom: 12px;
   padding-bottom: 10px;
-  border-bottom: 1px solid rgba(126, 200, 227, 0.15);
+  border-bottom: 1px solid var(--color-borde);
 }
 
 .estadisticas-zona__contexto strong {
   font-size: 13px;
-  color: #edf6ff;
+  color: var(--color-texto);
 }
 
 .estadisticas-zona__contexto span {
   font-size: 10px;
-  color: #9bb5d6;
+  color: var(--color-texto-secundario);
 }
 
 .estadisticas-zona__metricas {
@@ -145,20 +143,20 @@
   gap: 2px;
   padding: 10px 6px;
   border-radius: 12px;
-  background: rgba(27, 35, 48, 0.75);
-  border: 1px solid rgba(126, 200, 227, 0.16);
+  background: var(--color-tarjeta);
+  border: 1px solid var(--color-borde);
 }
 
 .estadisticas-zona__metrica-valor {
   font-size: 18px;
   font-weight: 800;
-  color: #3ecf8e;
+  color: var(--color-acento);
 }
 
 .estadisticas-zona__metrica-label {
   font-size: 9px;
   text-align: center;
-  color: #9bb5d6;
+  color: var(--color-texto-secundario);
   letter-spacing: 0.02em;
 }
 
@@ -167,21 +165,21 @@
 }
 
 .estadisticas-zona__tooltip {
-  background: #111827;
-  border: 1px solid rgba(126, 200, 227, 0.25);
+  background: var(--color-tarjeta);
+  border: 1px solid var(--color-borde);
   border-radius: 8px;
   padding: 6px 10px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.14);
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #edf6ff;
+  color: var(--color-texto);
   font-size: 12px;
   white-space: nowrap;
 }
 
 .estadisticas-zona__tooltip strong {
-  color: #3ecf8e;
+  color: var(--color-acento);
 }
 
 .estadisticas-zona__tooltip-punto {
