@@ -1,4 +1,3 @@
-// src/utils/geoFiltros.js
 import proj4 from 'proj4'
 import { point, distance, circle, booleanIntersects } from '@turf/turf'
 import { asegurarDefinicionEPSG } from './reproyectar'

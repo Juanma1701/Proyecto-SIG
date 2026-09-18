@@ -3,7 +3,6 @@ import Mapa from "../components/Mapa";
 import '../styles/Dashboard.css'
 import SeleccionarCapa from '../components/SeleccionarCapa';
 import CargarCapaAPI from "../components/CargarCapaAPI";
-import ModuloProximamente from "../components/ModuloProximamente";
 import '../styles/ModuloProximamente.css'
 import { Filter, Layers, BarChart3, History } from 'lucide-react'
 import MenuCapas from '../components/MenuCapas';
@@ -21,6 +20,7 @@ export default function App() {
   const [estadisticasAbiertas, setEstadisticasAbiertas] = useState(false)
   const [historialAbierto, setHistorialAbierto] = useState(false)
   const mapaRef = useRef(null)
+
 
   const capaEquipamiento = [...capas]
     .reverse()
@@ -58,26 +58,35 @@ export default function App() {
               className={modoRenderer === 'leaflet' ? 'activo' : ''}
               onClick={() => setModoRenderer('leaflet')}
             >
-              Estándar
+              Selección Buffer
             </button>
             <button
-              className={modoRenderer === 'geolibre' ? 'activo' : ''}
-              onClick={() => setModoRenderer('geolibre')}
+              className={modoRenderer === 'GeoJSON' ? 'activo' : ''}
+              onClick={() => setModoRenderer('GeoJSON')}
             >
-              Alto rendimiento
+              Cargar GeoJSON
             </button>
           </div>
         </div>
 
-        <div className="sidebar-section">
-          <CargarCapaAPI capas={capas} setCapas={setCapas} />
-        </div>
-
-        <div className="capa-zone">
-          <SeleccionarCapa 
-            setCapas={setCapas}
-            captura={coordenada}
-          />
+        <div className='sidebar-type'>
+          {modoRenderer === 'GeoJSON' ? (
+            <div className="sidebar-section">
+              <CargarCapaArchivo capas={capas} setCapas={setCapas} />
+            </div>
+          ) : (
+            <>
+              <div className="sidebar-section">
+                <CargarCapaAPI capas={capas} setCapas={setCapas} />
+              </div>
+              <div className="capa-zone">
+                <SeleccionarCapa
+                  setCapas={setCapas}
+                  captura={coordenada}
+                />
+              </div>
+            </>
+          )}
         </div>
       </aside>
 
@@ -85,7 +94,7 @@ export default function App() {
         {modoRenderer === 'leaflet' ? (
           <Mapa ref={mapaRef} capas={capas} onMapReady={() => {}} onClickMapa={setCoordenada} />
         ) : (
-          <ModuloProximamente />
+          <Mapa capas={capas} onMapReady={() => {}} onClickMapa={setCoordenada} />
         )}
 
         {/* Cada botón vive en el mismo contenedor que su panel, apilados
