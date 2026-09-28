@@ -1,86 +1,147 @@
-// src/utils/detectarCRS.js
 import JSZip from 'jszip'
 
-/**
- * Tabla de coincidencias entre fragmentos de texto de un WKT (.prj)
- * y su código EPSG. No es un parser WKT completo (eso requeriría una
- * librería mucho más pesada) — es suficiente para reconocer los
- * sistemas más comunes en datos colombianos/de Latinoamérica.
- */
 const PATRONES_EPSG = [
-  { patron: /MAGNA.*ORIGEN.*NACIONAL|MAGNA_SIRGAS_Origen_Nacional/i, epsg: 9377 },
-  { patron: /MAGNA.*BOGOTA|MAGNA_Colombia_Bogota/i, epsg: 3116 },
-  { patron: /MAGNA.*ESTE|MAGNA_Colombia_Este/i, epsg: 3117 },
-  { patron: /MAGNA.*OESTE|MAGNA_Colombia_Oeste/i, epsg: 3115 },
-  { patron: /WGS_1984_UTM_Zone_18N|UTM.*Zone.*18.*N/i, epsg: 32618 },
-  { patron: /WGS_1984|WGS84|World Geodetic System 1984/i, epsg: 4326 },
+  [/magna.*origen.*nacional/, 9377],
+  [/magna.*colombia.*bogota/, 3116],
+  [/magna.*colombia.*(?:este.?central|east.?central)/, 3117],
+  [/magna.*colombia.*(?:este|east)/, 3118],
+  [/magna.*colombia.*(?:oeste|west)/, 3115],
+  [/wgs_1984_utm_zone_18n|utm.*zone.*18.*n/, 32618],
+  [/wgs.?84|world.?geodetic.?system.?1984/, 4326],
 ]
 
-/**
- * Intenta reconocer el EPSG a partir del texto WKT de un archivo .prj,
- * comparando contra patrones conocidos. Si no reconoce ninguno,
- * devuelve null en el epsg pero conserva el WKT crudo como referencia.
- */
+function extraerEPSG(texto) {
+  if (typeof texto !== 'string') return null
+
+  const patrones = [
+    /\/EPSG\/\d+\/(\d+)\s*$/i,
+    /EPSG::(\d+)\s*$/i,
+    /EPSG:(?:\d+\.\d+:)?(\d+)\s*$/i,
+    /^EPSG:(\d+)\s*$/i,
+  ]
+
+  for (const patron of patrones) {
+    const coincidencia = texto.match(patron)
+    if (coincidencia) return Number(coincidencia[1])
+  }
+
+  return /CRS84/i.test(texto) ? 4326 : null
+}
+
 function interpretarWKT(wktTexto) {
-  for (const { patron, epsg } of PATRONES_EPSG) {
-    if (patron.test(wktTexto)) {
+  if (typeof wktTexto !== 'string') {
+    return { epsg: null, fuente: 'archivo .prj con contenido inválido' }
+  }
+
+  const autoridad = wktTexto.match(
+    /(?:AUTHORITY|ID)\s*\[\s*["']EPSG["']\s*,\s*["']?(\d+)/i
+  )
+
+  if (autoridad) {
+    const epsg = Number(autoridad[1])
+    return { epsg, fuente: `archivo .prj (AUTHORITY EPSG:${epsg})` }
+  }
+
+  const texto = wktTexto
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+
+  for (const [patron, epsg] of PATRONES_EPSG) {
+    if (patron.test(texto)) {
       return { epsg, fuente: `archivo .prj (reconocido: EPSG:${epsg})` }
     }
   }
-  return { epsg: null, fuente: `archivo .prj (sistema no reconocido): ${wktTexto.slice(0, 80)}...` }
+
+  if (/crs84/i.test(texto)) {
+    return { epsg: 4326, fuente: 'archivo .prj (CRS84)' }
+  }
+
+  return { epsg: null, fuente: 'sistema no reconocido en el archivo .prj' }
 }
 
-/**
- * Detecta el CRS de un GeoJSON ya parseado (objeto JS), revisando la
- * propiedad `crs` del estándar antiguo de GeoJSON (RFC anterior a 2016).
- * El estándar actual (RFC 7946) asume siempre EPSG:4326 y no declara
- * `crs`, así que si no existe esa propiedad, se asume 4326 por defecto.
- */
+// Una posición en grados está acotada: |longitud| <= 180 y |latitud| <= 90. Un
+// archivo sin miembro "crs" que trae magnitudes de metros es casi con certeza un
+// sistema proyectado que perdió la etiqueta al exportarse, y asumir 4326 en ese
+// caso dibuja la capa fuera del planeta sin avisar.
+//
+// Se mira solo una muestra de vértices: recorrer miles de coordenadas en cada
+// carga no aporta nada, y con 200 ya es imposible que un archivo válido en
+// grados esté cerca del límite.
+const MUESTRA_MAXIMA = 200
+
+function posicionEnGrados(posicion) {
+  return Math.abs(posicion[0]) <= 180 && Math.abs(posicion[1]) <= 90
+}
+
+function revisarGeometria(geometria, estado) {
+  if (!geometria) return true
+  if (estado.vistas >= MUESTRA_MAXIMA) return true
+
+  if (geometria.type === 'GeometryCollection') {
+    return (geometria.geometries || []).every((hija) => revisarGeometria(hija, estado))
+  }
+
+  const recorrer = (coordenadas) => {
+    if (estado.vistas >= MUESTRA_MAXIMA) return true
+    if (!Array.isArray(coordenadas) || coordenadas.length === 0) return true
+
+    if (typeof coordenadas[0] === 'number') {
+      estado.vistas += 1
+      return posicionEnGrados(coordenadas)
+    }
+
+    return coordenadas.every(recorrer)
+  }
+
+  return recorrer(geometria.coordinates)
+}
+
+function parecenGrados(geojson) {
+  const estado = { vistas: 0 }
+  const geometrias = (geojson?.features || []).map((feature) => feature?.geometry)
+  return geometrias.every((geometria) => revisarGeometria(geometria, estado))
+}
+
 function detectarCRSGeoJSON(geojson) {
   const crsProp = geojson?.crs?.properties?.name
 
   if (!crsProp) {
-    return { epsg: 4326, fuente: 'GeoJSON sin propiedad crs (asumido EPSG:4326 por estándar)' }
+    if (!parecenGrados(geojson)) {
+      return {
+        epsg: null,
+        fuente: 'las coordenadas no son grados: el archivo parece estar en un sistema proyectado (metros) pero no declara su EPSG',
+      }
+    }
+
+    return { epsg: 4326, fuente: 'GeoJSON sin propiedad crs (WGS84 por estándar)' }
   }
 
-  // El nombre suele venir como "urn:ogc:def:crs:EPSG::3116" o similar
-  const match = crsProp.match(/EPSG::?(\d+)/i)
-  if (match) {
-    return { epsg: parseInt(match[1], 10), fuente: 'propiedad crs del GeoJSON' }
+  const epsg = extraerEPSG(crsProp)
+  if (epsg) {
+    return { epsg, fuente: 'propiedad crs del GeoJSON' }
   }
 
-  return { epsg: null, fuente: `propiedad crs no reconocida: ${crsProp}` }
+  return { epsg: null, fuente: `propiedad crs no reconocida: ${String(crsProp)}` }
 }
 
-/**
- * Detecta el CRS de un archivo Shapefile (.zip), buscando y leyendo
- * el archivo .prj dentro del zip. Si no hay .prj, no se puede saber
- * el sistema real, así que se avisa explícitamente en vez de asumir.
- */
 async function detectarCRSShapefile(archivoZip) {
   try {
     const zip = await JSZip.loadAsync(archivoZip)
-    const archivoPrj = Object.values(zip.files).find((f) => f.name.toLowerCase().endsWith('.prj'))
+    const archivoPrj = Object.values(zip.files).find((archivo) =>
+      archivo.name.toLowerCase().endsWith('.prj')
+    )
 
     if (!archivoPrj) {
-      return { epsg: null, fuente: 'shapefile sin archivo .prj (sistema desconocido)' }
+      return { epsg: null, fuente: 'shapefile sin archivo .prj' }
     }
 
-    const wktTexto = await archivoPrj.async('text')
-    return interpretarWKT(wktTexto)
-  } catch (error) {
-    console.error('[detectarCRS] error leyendo .prj del shapefile', error)
-    return { epsg: null, fuente: 'no se pudo leer el .prj del shapefile' }
+    return interpretarWKT(await archivoPrj.async('text'))
+  } catch {
+    return { epsg: null, fuente: 'no se pudo leer el archivo .prj del shapefile' }
   }
 }
 
-/**
- * Punto de entrada único: detecta el CRS de una capa según su tipo de origen.
- *
- * @param {object|File} entrada - el GeoJSON ya parseado, o el archivo .zip original
- * @param {'geojson'|'shapefile'} tipo
- * @returns {{ epsg: number|null, fuente: string } | Promise<{ epsg: number|null, fuente: string }>}
- */
 export function detectarCRS(entrada, tipo) {
   if (tipo === 'geojson') {
     return detectarCRSGeoJSON(entrada)
@@ -90,5 +151,5 @@ export function detectarCRS(entrada, tipo) {
     return detectarCRSShapefile(entrada)
   }
 
-  return { epsg: 4326, fuente: 'tipo no reconocido (asumido EPSG:4326)' }
+  return { epsg: null, fuente: 'tipo de entrada no soportado' }
 }

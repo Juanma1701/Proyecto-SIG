@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
+    "test": "node --import ./scripts/registrar-resolver.mjs scripts/test-reproyeccion.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

@@ -1,9 +1,16 @@
 import { useState } from 'react'
 import InfoCRS from './InfoCRS'
-import { reproyectarGeoJSON, asegurarDefinicionEPSG } from '../utils/reproyectar'
+import SelectorEPSG from './SelectorEPSG'
+import {
+  reproyectarGeoJSON,
+  asegurarDefinicionEPSG,
+  esDibujableEnMapa,
+  etiquetaEPSG,
+} from '../utils/reproyectar'
 import { toast } from 'sonner'
 import '../styles/PanelCapas.css'
-import { Trash2, Download } from 'lucide-react'
+import { Trash2, Download, RotateCcw } from 'lucide-react'
+import { descargarGeoJSON } from '../utils/exportarCapa'
 
 function badgeInfo(geojson) {
   const tipo = geojson?.features?.[0]?.geometry?.type || geojson?.type || ''
@@ -13,17 +20,24 @@ function badgeInfo(geojson) {
   return { clase: '', texto: tipo || '—' }
 }
 
-function descargarGeoJSON(geojson, nombreArchivo) {
-  const blob = new Blob([JSON.stringify(geojson)], { type: 'application/json' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = nombreArchivo
-  a.click()
-  URL.revokeObjectURL(url)
+// Al subir un archivo la app lo convierte a 4326 para dibujarlo, así que
+// capa.geojson ya no es el archivo original sino su versión en grados. Cuando
+// existe el original tal cual se descarga ese; si no, se descarga lo que hay.
+function originalDeCapa(capa) {
+  return {
+    geojson: capa.geojsonOriginal || capa.geojsonCargaOriginal || capa.geojson,
+    epsg: capa.crsOrigen?.epsg ?? capa.crsCargaOriginal?.epsg ?? capa.crs?.epsg,
+  }
 }
 
-const SISTEMAS_PROYECTADOS = [3115, 3116, 3117, 9377, 32618]
+function epsgOriginal(capa) {
+  return originalDeCapa(capa).epsg
+}
+
+function descargarOriginal(capa) {
+  const { geojson, epsg } = originalDeCapa(capa)
+  descargarGeoJSON(geojson, capa.nombre, epsg, 'original')
+}
 
 export default function PanelCapas({ capas, setCapas }) {
   const [sridDestino, setSridDestino] = useState({})
@@ -31,38 +45,56 @@ export default function PanelCapas({ capas, setCapas }) {
   const [gruposAbiertos, setGruposAbiertos] = useState({})
 
   async function manejarReproyeccion(capa) {
-    const destino = parseInt(sridDestino[capa.id])
-    if (!destino) return toast.error('Escribe un código EPSG válido')
+    const destino = Number(sridDestino[capa.id])
+    if (!Number.isInteger(destino) || !destino) {
+      return toast.error('Selecciona un sistema de destino de la lista')
+    }
+
+    const origen = capa.crs?.epsg
+    if (!Number.isInteger(Number(origen)) || !Number(origen)) {
+      return toast.error(
+        `No se sabe el sistema de origen de "${capa.nombre}". Vuelve a cargarla para que se detecte su .prj o su propiedad crs.`
+      )
+    }
 
     setReproyectando(capa.id)
     try {
       await asegurarDefinicionEPSG(destino)
-      const reproyectado = reproyectarGeoJSON(capa.geojson, capa.crs.epsg, destino)
+      const reproyectado = reproyectarGeoJSON(capa.geojson, origen, destino)
 
-      if (SISTEMAS_PROYECTADOS.includes(destino)) {
-        
-        setCapas(capas.map(c =>
+      // La decisión se toma con el catálogo, no con una lista escrita a mano:
+      // así 3857, 3114, 3118 y 31119 también se tratan como proyectados y
+      // nunca se pintan metros sobre la geometría viva de la capa. Lo que no
+      // se puede dibujar (o no se conoce) cae aquí por defecto, que es el
+      // camino seguro.
+      if (!esDibujableEnMapa(destino)) {
+        setCapas(prev => prev.map(c =>
           c.id === capa.id
             ? { ...c, geojsonReproyectado: reproyectado, crsReproyectado: { epsg: destino } }
             : c
         ))
         toast.warning(
-          `Reproyectada a EPSG:${destino} (metros). El mapa sigue mostrando la capa en su sistema original porque Leaflet solo dibuja en grados — usa "Descargar reproyectado" para exportar este resultado.`,
+          `Reproyectada a ${etiquetaEPSG(destino)}. El mapa sigue mostrando la capa en su sistema original porque Leaflet solo dibuja en grados — usa "Descargar reproyectado" para exportar este resultado.`,
           { duration: 6000 }
         )
       } else {
-        setCapas(capas.map(c =>
+        setCapas(prev => prev.map(c =>
           c.id === capa.id
             ? {
-                ...c,
-                geojson: reproyectado,
-                crs: { epsg: destino, fuente: 'reproyectado por el usuario' },
-                geojsonReproyectado: null,
-                crsReproyectado: null,
-              }
+              ...c,
+              geojson: reproyectado,
+              crs: { epsg: destino, fuente: 'reproyectado por el usuario' },
+              // Se guarda la geometría tal como llegó solo la primera vez, para
+              // que "Restaurar" devuelva el archivo original y no otra
+              // reproyección encadenada.
+              geojsonCargaOriginal: c.geojsonCargaOriginal ?? c.geojson,
+              crsCargaOriginal: c.crsCargaOriginal ?? c.crs,
+              geojsonReproyectado: null,
+              crsReproyectado: null,
+            }
             : c
         ))
-        toast.success(`Reproyectada a EPSG:${destino}`)
+        toast.success(`Reproyectada a ${etiquetaEPSG(destino)}`)
       }
     } catch (error) {
       console.error(error)
@@ -70,6 +102,25 @@ export default function PanelCapas({ capas, setCapas }) {
     } finally {
       setReproyectando(null)
     }
+  }
+
+  function restaurarCapa(capa) {
+    if (!capa.geojsonCargaOriginal) return
+    setCapas(prev => prev.map(c =>
+      c.id === capa.id
+        ? {
+          ...c,
+          geojson: capa.geojsonCargaOriginal,
+          crs: capa.crsCargaOriginal,
+          geojsonCargaOriginal: null,
+          crsCargaOriginal: null,
+          geojsonReproyectado: null,
+          crsReproyectado: null,
+        }
+        : c
+    ))
+    setSridDestino(prev => ({ ...prev, [capa.id]: '' }))
+    toast.success('Capa restaurada a su sistema original')
   }
 
   function marcarTodas(valor) {
@@ -126,12 +177,16 @@ export default function PanelCapas({ capas, setCapas }) {
 
           {!esZona && (
             <>
-              <input
-                placeholder="EPSG destino (ej: 3116)"
-                value={sridDestino[capa.id] || ''}
-                onChange={e => setSridDestino({ ...sridDestino, [capa.id]: e.target.value })}
+              <SelectorEPSG
+                origen={capa.crs?.epsg}
+                valor={sridDestino[capa.id] ?? ''}
+                onChange={(epsg) => setSridDestino(prev => ({ ...prev, [capa.id]: epsg }))}
+                deshabilitado={reproyectando === capa.id}
               />
-              <button onClick={() => manejarReproyeccion(capa)} disabled={reproyectando === capa.id}>
+              <button
+                onClick={() => manejarReproyeccion(capa)}
+                disabled={reproyectando === capa.id || !sridDestino[capa.id]}
+              >
                 {reproyectando === capa.id ? (
                   <><span className="spinner"></span>Reproyectando...</>
                 ) : (
@@ -140,12 +195,9 @@ export default function PanelCapas({ capas, setCapas }) {
               </button>
               <button
                 className="panel-capas__boton-descarga"
-                onClick={() => descargarGeoJSON(
-                  capa.geojson,
-                  `${capa.nombre}_original_EPSG${capa.crs.epsg}.geojson`
-                )}
+                onClick={() => descargarOriginal(capa)}
               >
-                <Download size={14} /> Descargar original (EPSG:{capa.crs.epsg})
+                <Download size={14} /> Descargar original ({etiquetaEPSG(epsgOriginal(capa))})
               </button>
 
               {capa.geojsonReproyectado && (
@@ -153,10 +205,21 @@ export default function PanelCapas({ capas, setCapas }) {
                   className="panel-capas__boton-descarga"
                   onClick={() => descargarGeoJSON(
                     capa.geojsonReproyectado,
-                    `${capa.nombre}_EPSG${capa.crsReproyectado.epsg}.geojson`
+                    capa.nombre,
+                    capa.crsReproyectado.epsg,
+                    'reproyectado'
                   )}
                 >
-                  <Download size={14} /> Descargar reproyectado (EPSG:{capa.crsReproyectado.epsg})
+                  <Download size={14} /> Descargar reproyectado ({etiquetaEPSG(capa.crsReproyectado.epsg)})
+                </button>
+              )}
+
+              {capa.geojsonCargaOriginal && (
+                <button
+                  className="panel-capas__boton-descarga"
+                  onClick={() => restaurarCapa(capa)}
+                >
+                  <RotateCcw size={14} /> Restaurar original (EPSG:{capa.crsCargaOriginal.epsg})
                 </button>
               )}
             </>
