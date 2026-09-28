@@ -5,11 +5,24 @@ import { detectarCRS } from '../utils/detectarCRS'
 import { toast } from 'sonner'
 import { Upload, FileJson, FileArchive, MapPin, CheckCircle2 } from 'lucide-react'
 import '../styles/CargarGeoJSON.css'
-import { reproyectarGeoJSON } from '../utils/reproyectarGeoJSON'
+import {
+  asegurarDefinicionEPSG,
+  normalizarGeoJSON,
+  reproyectarGeoJSON,
+} from '../utils/reproyectarGeoJSON'
 
 const EXTENSIONES_VALIDAS = ['geojson', 'json', 'zip', 'kml']
 
-export default function CargarCapaArchivo({ capas, setCapas }) {
+function crearIdCapa() {
+  if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID()
+  return `capa-${Date.now()}-${Math.random().toString(36).slice(2)}`
+}
+
+function clonarGeoJSON(geojson) {
+  return JSON.parse(JSON.stringify(geojson))
+}
+
+export default function CargarCapaArchivo({ setCapas }) {
   const [cargando, setCargando] = useState(false)
   const [arrastrando, setArrastrando] = useState(false)
   const [ultimoArchivo, setUltimoArchivo] = useState(null)
@@ -18,54 +31,86 @@ export default function CargarCapaArchivo({ capas, setCapas }) {
   async function procesarArchivo(archivo) {
     if (!archivo) return
 
-    const extension = archivo.name.split('.').pop().toLowerCase()
+    const extension = archivo.name.split('.').pop()?.toLowerCase()
     if (!EXTENSIONES_VALIDAS.includes(extension)) {
       toast.error('Formato no soportado. Usa .geojson, .zip (shapefile) o .kml')
       return
     }
 
     setCargando(true)
-    let geojson = null
-    let crsDetectado = { epsg: 4326, fuente: 'default' }
+    let geojsonOriginal
+    let geojsonRender
+    let crsOrigen
 
     try {
       if (extension === 'geojson' || extension === 'json') {
-        const texto = await archivo.text()
-        geojson = JSON.parse(texto)
-        crsDetectado = detectarCRS(geojson, 'geojson')
-        console.log('CRS detectado:', crsDetectado)
-        geojson = reproyectarGeoJSON(geojson, crsDetectado.epsg)
+        const texto = (await archivo.text()).replace(/^\uFEFF/, '')
+        geojsonOriginal = normalizarGeoJSON(JSON.parse(texto))
+        crsOrigen = detectarCRS(geojsonOriginal, 'geojson')
+
+        if (crsOrigen.epsg == null) {
+          throw new Error(`No se pudo determinar el sistema de referencia del GeoJSON. ${crsOrigen.fuente}`)
+        }
+
+        await asegurarDefinicionEPSG(crsOrigen.epsg)
+        geojsonRender = reproyectarGeoJSON(geojsonOriginal, crsOrigen.epsg)
       }
 
       if (extension === 'zip') {
         const buffer = await archivo.arrayBuffer()
-        geojson = await shp(buffer)
-        crsDetectado = await detectarCRS(archivo, 'shapefile')
-        console.log('CRS detectado:', crsDetectado)
-        geojson = reproyectarGeoJSON(geojson, crsDetectado.epsg)
+        crsOrigen = await detectarCRS(buffer, 'shapefile')
+
+        if (crsOrigen.epsg == null) {
+          throw new Error(
+            `El ZIP no contiene un archivo .prj con un CRS reconocible. ${crsOrigen.fuente}`
+          )
+        }
+
+        await asegurarDefinicionEPSG(crsOrigen.epsg)
+        const resultado = await shp(buffer)
+
+        if (Array.isArray(resultado)) {
+          if (resultado.length !== 1) {
+            throw new Error('El ZIP contiene varias capas; carga un shapefile por archivo')
+          }
+          geojsonOriginal = normalizarGeoJSON(resultado[0])
+        } else {
+          geojsonOriginal = normalizarGeoJSON(resultado)
+        }
+
+        geojsonRender = geojsonOriginal
       }
 
       if (extension === 'kml') {
         const texto = await archivo.text()
         const parser = new DOMParser()
         const kmlDom = parser.parseFromString(texto, 'text/xml')
-        geojson = kml(kmlDom)
-        crsDetectado = { epsg: 4326, fuente: 'especificación KML' }
+
+        if (kmlDom.getElementsByTagName('parsererror').length > 0) {
+          throw new Error('El archivo KML no es un XML válido')
+        }
+
+        geojsonOriginal = normalizarGeoJSON(kml(kmlDom))
+        crsOrigen = { epsg: 4326, fuente: 'especificación KML' }
+        geojsonRender = geojsonOriginal
       }
 
       const nuevaCapa = {
-        id: crypto.randomUUID(),
+        id: crearIdCapa(),
         nombre: archivo.name,
+        tipo: 'archivo',
         archivoOriginal: archivo,
-        geojson,
-        geojsonOriginal: geojson,
+        geojson: geojsonRender,
+        geojsonOriginal: clonarGeoJSON(geojsonOriginal),
         hiddenCategories: [],
-        crs: crsDetectado,
+        crs: crsOrigen,
+        crsOrigen,
+        crsRender: { epsg: 4326, fuente: 'WGS84 para Leaflet' },
         visible: true,
-        guardadaEnNube: false
+        guardadaEnNube: false,
       }
 
-      setCapas([...capas, nuevaCapa])
+      setCapas(prev => [...prev, nuevaCapa])
       setUltimoArchivo({ nombre: archivo.name, extension })
       toast.success(`"${archivo.name}" cargada en el mapa`)
     } catch (error) {
@@ -84,7 +129,7 @@ export default function CargarCapaArchivo({ capas, setCapas }) {
 
   function manejarSeleccion(evento) {
     procesarArchivo(evento.target.files?.[0])
-    evento.target.value = '' 
+    evento.target.value = ''
   }
 
   return (

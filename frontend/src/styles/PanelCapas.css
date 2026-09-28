@@ -284,6 +284,46 @@
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
+.selector-epsg {
+  display: grid;
+  gap: 6px;
+}
+
+.selector-epsg__select {
+  width: 100%;
+  background: var(--color-tarjeta);
+  border: 1px solid var(--color-borde);
+  color: var(--color-texto);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 12px;
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.selector-epsg__select:focus {
+  outline: none;
+  border-color: var(--color-acento);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.selector-epsg__select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.selector-epsg__nota {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.4;
+  color: #15803d;
+}
+
+.selector-epsg__nota--proyectado {
+  color: #b45309;
+}
+
 .capa-chip-detalle button {
   width: 100%;
   background: var(--color-exito);

@@ -90,6 +90,18 @@ function obtenerCentroGeometria(geometry) {
   return null
 }
 
+function obtenerEtiquetaFeature(feature) {
+  const properties = feature?.properties || {}
+  return String(
+    properties.name ||
+    properties.NOMBRE ||
+    properties.NMG ||
+    properties.NOMBRE_EQUIP ||
+    properties.NOMBRE_SITIO ||
+    'Feature'
+  )
+}
+
 function escaparHTML(texto) {
   if (!texto) return ''
   return String(texto)
@@ -147,6 +159,7 @@ const Mapa = forwardRef(function Mapa({ capas, onMapReady, onClickMapa }, refExt
   const onClickMapaRef = useRef(onClickMapa)
   const onMapReadyRef = useRef(onMapReady)
   const enriquecimientoRef = useRef({}) // cache por feature.id: 'cargando' | { website }
+  const ajustesVistaRef = useRef(new Set())
 
   // Expone hacia afuera: el nodo DOM del contenedor (para capturarlo con
   // html2canvas), y dos funciones para desactivar/restaurar el clustering
@@ -238,6 +251,7 @@ const Mapa = forwardRef(function Mapa({ capas, onMapReady, onClickMapa }, refExt
       if (!idsActuales.has(id)) {
         mapa.removeLayer(capasLeafletRef.current[id])
         delete capasLeafletRef.current[id]
+        ajustesVistaRef.current.delete(id)
       }
     })
 

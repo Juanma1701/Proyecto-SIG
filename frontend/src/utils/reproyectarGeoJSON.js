@@ -1,85 +1,208 @@
-// src/utils/reproyectarGeoJSON.js
 import proj4 from 'proj4'
+import { registrarDefinicionesEPSG, obtenerEPSG } from './catalogoEPSG'
 
-// Mismas definiciones que cubre detectarCRS.js (PATRONES_EPSG)
-proj4.defs('EPSG:9377',
-  '+proj=tmerc +lat_0=4.596200417 +lon_0=-73.11341833333333 ' +
-  '+k=0.9992 +x_0=5000000 +y_0=2000000 +ellps=GRS80 ' +
-  '+towgs84=0,0,0,0,0,0,0 +units=m +no_defs'
-)
-proj4.defs('EPSG:3116',
-  '+proj=tmerc +lat_0=4.596200417 +lon_0=-74.07750791666667 ' +
-  '+k=1 +x_0=1000000 +y_0=1000000 +ellps=GRS80 ' +
-  '+towgs84=0,0,0,0,0,0,0 +units=m +no_defs'
-)
-proj4.defs('EPSG:3117',
-  '+proj=tmerc +lat_0=4.596200417 +lon_0=-71.60250791666666 ' +
-  '+k=1 +x_0=1000000 +y_0=1000000 +ellps=GRS80 ' +
-  '+towgs84=0,0,0,0,0,0,0 +units=m +no_defs'
-)
-proj4.defs('EPSG:3115',
-  '+proj=tmerc +lat_0=4.596200417 +lon_0=-77.07750791666667 ' +
-  '+k=1 +x_0=1000000 +y_0=1000000 +ellps=GRS80 ' +
-  '+towgs84=0,0,0,0,0,0,0 +units=m +no_defs'
-)
-proj4.defs('EPSG:32618',
-  '+proj=utm +zone=18 +datum=WGS84 +units=m +no_defs'
-)
-// EPSG:4326 ya viene incluido por defecto en proj4 (WGS84)
+registrarDefinicionesEPSG()
 
-/**
- * Transforma recursivamente cualquier array de coordenadas
- * (Point, LineString, Polygon, Multi*, con cualquier nivel de anidación)
- * de un EPSG de origen a EPSG:4326.
- */
-function transformarCoordenadas(coords, epsgOrigen) {
-  // Un punto es [x, y] o [x, y, z] — el nivel más profundo, siempre numérico
-  if (typeof coords[0] === 'number') {
-    const [x, y] = coords
-    const [lng, lat] = proj4(`EPSG:${epsgOrigen}`, 'EPSG:4326', [x, y])
-    return coords.length > 2 ? [lng, lat, coords[2]] : [lng, lat]
+const TIPOS_GEOMETRIA = new Set([
+  'Point',
+  'MultiPoint',
+  'LineString',
+  'MultiLineString',
+  'Polygon',
+  'MultiPolygon',
+  'GeometryCollection',
+])
+
+// Recorre el árbol de coordenadas validando dos cosas distintas según la
+// profundidad: una *posición* ([x, y] o [x, y, z]) necesita al menos dos
+// números, mientras que una *lista* (anillos de un Polygon, polígonos de un
+// MultiPolygon, vértices de una línea) solo necesita no estar vacía. Exigir dos
+// elementos en las listas rechazaba cualquier polígono sin huecos, que es el
+// caso más común.
+function validarCoordenadas(coordenadas) {
+  if (!Array.isArray(coordenadas) || coordenadas.length === 0) {
+    throw new Error('Una geometría contiene coordenadas inválidas')
   }
-  // Si no, es un array de arrays: recursión
-  return coords.map((c) => transformarCoordenadas(c, epsgOrigen))
+
+  if (typeof coordenadas[0] === 'number') {
+    if (coordenadas.length < 2) {
+      throw new Error('Una geometría contiene coordenadas inválidas')
+    }
+
+    if (!Number.isFinite(coordenadas[0]) || !Number.isFinite(coordenadas[1])) {
+      throw new Error('Una geometría contiene coordenadas no numéricas')
+    }
+
+    return
+  }
+
+  coordenadas.forEach(validarCoordenadas)
 }
 
-function transformarGeometria(geometria, epsgOrigen) {
+function validarGeometria(geometria) {
+  if (geometria === null) return
+
+  if (!geometria || typeof geometria !== 'object' || !TIPOS_GEOMETRIA.has(geometria.type)) {
+    throw new Error(`Tipo de geometría no soportado: ${geometria?.type || 'desconocido'}`)
+  }
+
+  if (geometria.type === 'GeometryCollection') {
+    if (!Array.isArray(geometria.geometries) || geometria.geometries.length === 0) {
+      throw new Error('GeometryCollection no contiene geometrías')
+    }
+    geometria.geometries.forEach(validarGeometria)
+    return
+  }
+
+  validarCoordenadas(geometria.coordinates)
+}
+
+export function normalizarGeoJSON(entrada) {
+  if (!entrada || typeof entrada !== 'object' || Array.isArray(entrada)) {
+    throw new Error('El archivo no contiene un objeto GeoJSON válido')
+  }
+
+  if (entrada.type === 'FeatureCollection') {
+    if (!Array.isArray(entrada.features)) {
+      throw new Error('FeatureCollection no contiene el array features')
+    }
+
+    const features = entrada.features.map((feature) => {
+      if (!feature || feature.type !== 'Feature') {
+        throw new Error('FeatureCollection contiene un elemento que no es Feature')
+      }
+      validarGeometria(feature.geometry)
+      return {
+        ...feature,
+        properties: feature.properties || {},
+      }
+    })
+
+    if (!features.some((feature) => feature.geometry !== null)) {
+      throw new Error('El GeoJSON no contiene geometrías dibujables')
+    }
+
+    return {
+      ...entrada,
+      features,
+    }
+  }
+
+  if (entrada.type === 'Feature') {
+    validarGeometria(entrada.geometry)
+    if (entrada.geometry === null) {
+      throw new Error('La Feature no contiene una geometría')
+    }
+
+    return {
+      type: 'FeatureCollection',
+      features: [{
+        ...entrada,
+        properties: entrada.properties || {},
+      }],
+    }
+  }
+
+  if (TIPOS_GEOMETRIA.has(entrada.type)) {
+    validarGeometria(entrada)
+    return {
+      type: 'FeatureCollection',
+      features: [{
+        type: 'Feature',
+        properties: {},
+        geometry: entrada,
+      }],
+    }
+  }
+
+  throw new Error(`Tipo GeoJSON no soportado: ${entrada.type || 'desconocido'}`)
+}
+
+function transformarCoordenadas(coordenadas, epsgOrigen, epsgDestino) {
+  if (typeof coordenadas[0] === 'number') {
+    const [x, y, ...extra] = coordenadas
+    const [lng, lat] = proj4(`EPSG:${epsgOrigen}`, `EPSG:${epsgDestino}`, [x, y])
+    return [lng, lat, ...extra]
+  }
+
+  return coordenadas.map((coordenada) =>
+    transformarCoordenadas(coordenada, epsgOrigen, epsgDestino)
+  )
+}
+
+function transformarGeometria(geometria, epsgOrigen, epsgDestino) {
   if (!geometria) return geometria
 
   if (geometria.type === 'GeometryCollection') {
     return {
       ...geometria,
-      geometries: geometria.geometries.map((g) => transformarGeometria(g, epsgOrigen))
+      geometries: geometria.geometries.map((geometriaHija) =>
+        transformarGeometria(geometriaHija, epsgOrigen, epsgDestino)
+      ),
     }
   }
 
   return {
     ...geometria,
-    coordinates: transformarCoordenadas(geometria.coordinates, epsgOrigen)
+    coordinates: transformarCoordenadas(geometria.coordinates, epsgOrigen, epsgDestino),
   }
 }
 
-/**
- * Reproyecta un GeoJSON completo (Feature, FeatureCollection o Geometry suelta)
- * de epsgOrigen a EPSG:4326. Si ya es 4326, lo devuelve intacto.
- */
-export function reproyectarGeoJSON(geojson, epsgOrigen) {
-  if (!epsgOrigen || epsgOrigen === 4326) return geojson
+export function reproyectarGeoJSON(geojson, epsgOrigen, epsgDestino = 4326) {
+  const origen = Number(epsgOrigen)
+  const destino = Number(epsgDestino)
 
-  if (geojson.type === 'FeatureCollection') {
-    return {
-      ...geojson,
-      features: geojson.features.map((f) => ({
-        ...f,
-        geometry: transformarGeometria(f.geometry, epsgOrigen)
-      }))
+  if (!Number.isInteger(origen) || !Number.isInteger(destino)) {
+    throw new Error('El EPSG de origen y destino debe ser un número entero')
+  }
+
+  if (origen === destino) return geojson
+
+  const normalizado = normalizarGeoJSON(geojson)
+
+  try {
+    if (normalizado.type === 'FeatureCollection') {
+      return {
+        ...normalizado,
+        features: normalizado.features.map((feature) => ({
+          ...feature,
+          geometry: transformarGeometria(feature.geometry, origen, destino),
+        })),
+      }
     }
+
+    return transformarGeometria(normalizado, origen, destino)
+  } catch (error) {
+    throw new Error(
+      `No se pudo reproyectar de EPSG:${origen} a EPSG:${destino}: ${error.message}`,
+      { cause: error }
+    )
+  }
+}
+
+export async function asegurarDefinicionEPSG(epsg) {
+  const codigo = Number(epsg)
+
+  if (!Number.isInteger(codigo) || codigo <= 0) {
+    throw new Error('El código EPSG debe ser un número entero positivo')
   }
 
-  if (geojson.type === 'Feature') {
-    return { ...geojson, geometry: transformarGeometria(geojson.geometry, epsgOrigen) }
+  const nombre = `EPSG:${codigo}`
+
+  // Los sistemas del catálogo ya quedaron registrados al cargar el módulo, así
+  // que nunca se sale a la red para los destinos que la interfaz ofrece.
+  if (obtenerEPSG(codigo)) return
+  if (proj4.defs(nombre)) return
+
+  const response = await fetch(`https://epsg.io/${codigo}.proj4`)
+  if (!response.ok) {
+    throw new Error(`No se pudo obtener la definición de ${nombre}`)
   }
 
-  // Geometry suelta (Point, Polygon, etc. sin envoltorio Feature)
-  return transformarGeometria(geojson, epsgOrigen)
+  const definicion = (await response.text()).trim()
+  if (!definicion || definicion.startsWith('<')) {
+    throw new Error(`La definición de ${nombre} no es válida`)
+  }
+
+  proj4.defs(nombre, definicion)
 }
