@@ -63,11 +63,6 @@ function SeleccionarCapa({ setCapas, captura }) {
 
             const resultados = await Promise.allSettled(tareas)
 
-            // Se etiqueta cada capa resultante con el id de la zona que la
-            // originó. Así, las estadísticas pueden sumar exactamente lo
-            // que le pertenece a esta zona sin tener que re-calcular
-            // distancias (que dependería de qué tan exacto sea el filtro
-            // interno de cada fuente de datos).
             const nuevasCapas = resultados
                 .filter(r => r.status === 'fulfilled' && r.value)
                 .map(r => ({ ...r.value, zonaId: nuevaZona.id }))
