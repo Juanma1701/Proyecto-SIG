@@ -8,8 +8,21 @@ import { supabase } from '../lib/supabaseClient'
  * igual (o sigan disponibles) en el futuro.
  */
 export async function guardarZona(userId, zona, capaEquipamiento, capaLugares) {
+  const { data: coordenada, error: errorCoordenada } = await supabase
+    .from('coordenadas_capturadas')
+    .insert({
+      nombre: zona.nombre,
+      geom: `SRID=4326;POINT(${zona.centro.lng} ${zona.centro.lat})`,
+      srid_mostrado: 4326,
+    })
+    .select('id')
+    .single()
+
+  if (errorCoordenada) throw errorCoordenada
+
   const { error } = await supabase.from('zonas').insert({
     user_id: userId,
+    coordenada_id: coordenada.id,
     nombre: zona.nombre,
     centro_lat: zona.centro.lat,
     centro_lng: zona.centro.lng,
@@ -17,7 +30,10 @@ export async function guardarZona(userId, zona, capaEquipamiento, capaLugares) {
     geojson_equipamientos: capaEquipamiento?.geojsonOriginal || capaEquipamiento?.geojson || null,
     geojson_lugares: capaLugares?.geojsonOriginal || capaLugares?.geojson || null,
   })
-  if (error) throw error
+  if (error) {
+    await supabase.from('coordenadas_capturadas').delete().eq('id', coordenada.id)
+    throw error
+  }
 }
 
 /** Lista las zonas guardadas del usuario, más recientes primero. */
