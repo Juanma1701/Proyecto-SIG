@@ -1,12 +1,6 @@
--- ============================================================================
--- 10 consultas PostGIS/SQL — Equipamientos AMVA (Proyecto-SIG)
--- Tabla base: capas (una fila por feature, propiedades en jsonb)
--- Todas las consultas filtran por nombre_capa like 'Equipamientos AMVA - %'
--- para no mezclar con otras capas que se carguen a futuro en la misma tabla.
--- ============================================================================
 
 
--- 1) Conteo total de equipamientos por categoría (toda la región metropolitana)
+
 select
   propiedades->>'categoria' as categoria,
   count(*) as total
@@ -16,7 +10,7 @@ group by categoria
 order by total desc;
 
 
--- 2) Conteo de equipamientos por municipio
+
 select
   propiedades->>'municipio' as municipio,
   count(*) as total
