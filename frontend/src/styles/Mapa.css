@@ -32,6 +32,18 @@
   color: #edf6ff !important;
 }
 
+.mapa-etiqueta-limite {
+  padding: 2px 5px;
+  border: 1px solid rgba(15, 118, 110, 0.35);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #12332e;
+  box-shadow: 0 1px 4px rgba(15, 35, 32, 0.2);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 .mapa-popup {
   display: flex;
   flex-direction: column;

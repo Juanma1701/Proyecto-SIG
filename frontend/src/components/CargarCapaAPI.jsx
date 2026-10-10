@@ -80,10 +80,17 @@ export default function CargarCapaAPI({ setCapas }) {
       })
 
       const geojsonFinal = { type: 'FeatureCollection', features: featuresConCategoria }
+      const tipo = /vereda|barrio|comuna|corregimiento/i.test(nombreCapa) &&
+        featuresConCategoria.some((feature) =>
+          ['Polygon', 'MultiPolygon'].includes(feature.geometry?.type)
+        )
+        ? 'limites'
+        : undefined
 
       const nuevaCapa = {
         id: crypto.randomUUID(),
         nombre: `${nombreCapa} — ${municipio}`,
+        tipo,
         archivoOriginal: null,
         geojson: geojsonFinal,
         geojsonOriginal: geojsonFinal,
