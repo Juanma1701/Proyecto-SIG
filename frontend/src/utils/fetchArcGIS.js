@@ -1,4 +1,5 @@
 const AMVA_BASE = '/amva/server/rest/services'
+const TAMANO_PAGINA_CONSULTA = 1000
 
 let catalogoCache = null
 
@@ -95,21 +96,50 @@ export async function resolverCapaElegida(nombreServicio, idCapa) {
   return { url, servicio: nombreServicio, idCapa, epsg }
 }
 
-// Consulta un servicio ArcGIS REST (FeatureServer/MapServer) y devuelve GeoJSON listo para usar
+// Consulta todas las entidades de una capa ArcGIS REST y devuelve GeoJSON en WGS 84.
 export async function fetchCapaArcGIS(urlBaseCapa) {
-  const url = `${urlBaseCapa}/query?where=1=1&outFields=*&f=geojson`
+  const features = []
+  let resultOffset = 0
+  let primeraRespuesta = null
 
-  const res = await fetch(url)
-  if (!res.ok) throw new Error(`Error al consultar el servicio: ${res.status}`)
+  while (true) {
+    const parametros = new URLSearchParams({
+      where: '1=1',
+      outFields: '*',
+      returnGeometry: 'true',
+      outSR: '4326',
+      f: 'geojson',
+      resultOffset: String(resultOffset),
+      resultRecordCount: String(TAMANO_PAGINA_CONSULTA),
+    })
+    const url = `${urlBaseCapa}/query?${parametros}`
 
-  const geojson = await res.json()
+    const res = await fetch(url)
+    if (!res.ok) throw new Error(`Error al consultar el servicio: ${res.status}`)
 
-  if (geojson.error) {
-    console.error('[AMVA] error de ArcGIS', { url, error: geojson.error })
-    throw new Error(`${geojson.error.message || 'El servicio devolvió un error'} (capa: ${urlBaseCapa})`)
+    const geojson = await res.json()
+
+    if (geojson.error) {
+      console.error('[AMVA] error de ArcGIS', { url, error: geojson.error })
+      throw new Error(`${geojson.error.message || 'El servicio devolvió un error'} (capa: ${urlBaseCapa})`)
+    }
+
+    if (!Array.isArray(geojson.features)) {
+      throw new Error(`El servicio no devolvió entidades GeoJSON válidas (capa: ${urlBaseCapa})`)
+    }
+
+    if (!primeraRespuesta) primeraRespuesta = geojson
+    features.push(...geojson.features)
+
+    if (!geojson.exceededTransferLimit) break
+    if (geojson.features.length === 0) {
+      throw new Error(`La consulta quedó truncada y no pudo recuperar más entidades (capa: ${urlBaseCapa})`)
+    }
+
+    resultOffset += geojson.features.length
   }
 
-  return geojson
+  return { ...primeraRespuesta, features }
 }
 
 /**
