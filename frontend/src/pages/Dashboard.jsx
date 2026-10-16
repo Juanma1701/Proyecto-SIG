@@ -32,7 +32,7 @@ export default function App() {
     .reverse()
     .find(c => (
       c.origenAPI === true || c.crs?.fuente?.includes('AMVA ArcGIS REST')
-    ) && c.tipo !== 'lugares' && c.tipo !== 'suelo' && c.tipo !== 'cobertura' && c.tipo !== 'teselado' && c.visible) ?? null
+    ) && c.tipo !== 'lugares' && c.tipo !== 'suelo' && c.tipo !== 'cobertura' && c.tipo !== 'teselado' && c.tipo !== 'limites' && c.visible) ?? null
 
   const capaLugares = [...capas]
     .reverse()

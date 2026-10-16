@@ -110,7 +110,7 @@ const MAX_PAGINAS = 30
 
 export async function fetchCapaArcGIS(urlBaseCapa) {
   const geojson = await conCache(`geojson:${urlBaseCapa}`, async () => {
-    const urlSimple = `${urlBaseCapa}/query?where=1=1&outFields=*&f=geojson`
+    const urlSimple = `${urlBaseCapa}/query?where=1=1&outFields=*&returnGeometry=true&outSR=4326&f=geojson`
     const todas = []
     const vistos = new Set()
 

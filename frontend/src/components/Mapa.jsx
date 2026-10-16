@@ -15,7 +15,7 @@ import {
 } from '../utils/categoriasEquipamiento'
 import { CATEGORIAS_LUGARES, estiloCategoriaLugar } from '../utils/categoriasLugares'
 import { buscarWebsitePorNombre } from '../utils/fetchOverpass'
-import { geometriaEquipamiento } from '../utils/cercania' // NUEVO
+import { geometriaEquipamiento } from '../utils/cercania'
 
 
 import iconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png'
@@ -91,16 +91,31 @@ function obtenerCentroGeometria(geometry) {
   return null
 }
 
-function obtenerEtiquetaFeature(feature) {
+function obtenerEtiquetaFeature(feature, tipoLimite) {
   const properties = feature?.properties || {}
-  return String(
-    properties.name ||
-    properties.NOMBRE ||
-    properties.NMG ||
-    properties.NOMBRE_EQUIP ||
-    properties.NOMBRE_SITIO ||
-    'Feature'
-  )
+  const camposPorTipo = {
+    vereda: ['NOM_VEREDA', 'NOMBRE_BARRIO', 'NOMBRE', 'NMG', 'VEREDA'],
+    barrio: ['NOM_BARRIO', 'NOMBRE_BARRIO', 'NOMBARRIO', 'NMG', 'NOMBRE', 'name', 'BARRIO'],
+    comuna: ['NOMBRE_COMUNA', 'NOMBRE', 'NMG', 'name'],
+    corregimiento: ['NOM_CORREG', 'NOMBRE', 'NMG', 'name', 'CORREGIMIE'],
+  }
+  const camposNombre = camposPorTipo[tipoLimite] || [
+    'NOMBRE',
+    'NMG',
+    'name',
+    'NOMBRE_EQUIP',
+    'NOMBRE_SITIO',
+  ]
+
+  for (const campo of camposNombre) {
+    const clave = Object.keys(properties).find(
+      (propiedad) => propiedad.toUpperCase() === campo.toUpperCase()
+    )
+    const valor = clave ? String(properties[clave]).trim() : ''
+    if (valor && !/^\d+$/.test(valor)) return valor
+  }
+
+  return null
 }
 
 function escaparHTML(texto) {
@@ -280,6 +295,21 @@ const Mapa = forwardRef(function Mapa({ capas, onMapReady, onClickMapa, resaltad
       }
     })
 
+    // Etiquetas de límites (barrios, veredas...): se muestran solo desde cierto zoom
+    mapa.on('zoomend', () => {
+      Object.values(capasLeafletRef.current).forEach((capaLeaflet) => {
+        const zoomEtiquetas = capaLeaflet.zoomEtiquetasLimites
+        if (zoomEtiquetas === undefined) return
+
+        const mostrarEtiquetas = mapa.getZoom() >= zoomEtiquetas && mapa.hasLayer(capaLeaflet)
+        capaLeaflet.eachLayer((featureLayer) => {
+          if (!featureLayer.getTooltip()) return
+          if (mostrarEtiquetas) featureLayer.openTooltip()
+          else featureLayer.closeTooltip()
+        })
+      })
+    })
+
     mapRef.current = mapa
     onMapReadyRef.current && onMapReadyRef.current(mapa)
 
@@ -287,8 +317,8 @@ const Mapa = forwardRef(function Mapa({ capas, onMapReady, onClickMapa, resaltad
       mapa.remove()
       mapRef.current = null
       marcadorRef.current = null
-      poligonoClicRef.current = null 
-      idPoligonoRef.current = null 
+      poligonoClicRef.current = null
+      idPoligonoRef.current = null
     }
   }, [])
 
@@ -331,6 +361,67 @@ const Mapa = forwardRef(function Mapa({ capas, onMapReady, onClickMapa, resaltad
           if (!mapa.hasLayer(layer)) mapa.addLayer(layer)
         } else if (mapa.hasLayer(layer)) {
           mapa.removeLayer(layer)
+        }
+        return
+      }
+
+      // Límites administrativos (barrios, veredas, comunas, corregimientos)
+      if (capa.tipo === 'limites') {
+        const existing = capasLeafletRef.current[capa.id]
+        if (existing) {
+          mapa.removeLayer(existing)
+          delete capasLeafletRef.current[capa.id]
+        }
+
+        const nombreCapa = capa.nombre.toLowerCase()
+        let tipoLimite = 'otros'
+        if (/vereda/.test(nombreCapa)) tipoLimite = 'vereda'
+        else if (/barrio/.test(nombreCapa)) tipoLimite = 'barrio'
+        else if (/comuna/.test(nombreCapa)) tipoLimite = 'comuna'
+        else if (/corregimiento/.test(nombreCapa)) tipoLimite = 'corregimiento'
+        const zoomEtiquetas = /barrio/i.test(capa.nombre) ? 14 : tipoLimite === 'vereda' ? 12 : 11
+        const layer = L.geoJSON(capa.geojson, {
+          style: {
+            color: '#0f766e',
+            weight: 2,
+            opacity: 0.95,
+            fillColor: '#3ecf8e',
+            fillOpacity: 0.035,
+          },
+          onEachFeature: (feature, featureLayer) => {
+            const nombre = obtenerEtiquetaFeature(feature, tipoLimite)
+            if (!nombre) return
+
+            featureLayer.bindTooltip(nombre, {
+              direction: 'center',
+              className: 'mapa-etiqueta-limite',
+              opacity: 1,
+            })
+            featureLayer.bindPopup(`<strong>${escaparHTML(nombre)}</strong>`)
+            featureLayer.on('mouseover', () => {
+              featureLayer.setStyle({ weight: 3, fillOpacity: 0.12 })
+              featureLayer.bringToFront()
+            })
+            featureLayer.on('mouseout', () => layer.resetStyle(featureLayer))
+          },
+        })
+        layer.zoomEtiquetasLimites = zoomEtiquetas
+        capasLeafletRef.current[capa.id] = layer
+
+        if (capa.visible) {
+          layer.addTo(mapa)
+          if (!ajustesVistaRef.current.has(capa.id)) {
+            const bounds = layer.getBounds()
+            if (bounds.isValid()) {
+              mapa.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 })
+              ajustesVistaRef.current.add(capa.id)
+            }
+          }
+          if (mapa.getZoom() >= zoomEtiquetas) {
+            layer.eachLayer((featureLayer) => {
+              if (featureLayer.getTooltip()) featureLayer.openTooltip()
+            })
+          }
         }
         return
       }
