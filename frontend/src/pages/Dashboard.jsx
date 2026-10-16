@@ -4,7 +4,7 @@ import '../styles/Dashboard.css'
 import SeleccionarCapa from '../components/SeleccionarCapa';
 import CargarCapaAPI from "../components/CargarCapaAPI";
 import '../styles/ModuloProximamente.css'
-import { Filter, Layers, BarChart3, History, MapPinned, Sparkles, UserRound } from 'lucide-react'
+import { Filter, Layers, BarChart3, History, MapPinned, MapPin, Sparkles, UserRound } from 'lucide-react'
 import MenuCapas from '../components/MenuCapas';
 import FiltroCategorias from '../components/FiltroCategorias';
 import EstadisticasZona from '../components/EstadisticasZona';
@@ -12,6 +12,7 @@ import AuthPanel from '../components/AuthPanel';
 import HistorialZonas from '../components/HistorialZonas';
 import CargarCapaArchivo from '../components/CargarGeoJSON';
 import BotonGuardarNube from '../components/BotonGuardarNube';
+import QueHayCerca from '../components/QueHayCerca';
 
 
 export default function App() {
@@ -22,6 +23,8 @@ export default function App() {
   const [activadoCapa, setActivoCapa] = useState(false)
   const [estadisticasAbiertas, setEstadisticasAbiertas] = useState(false)
   const [historialAbierto, setHistorialAbierto] = useState(false)
+  const [cercaAbierto, setCercaAbierto] = useState(false)
+  const [resaltados, setResaltados] = useState(null)
   const [profileActive, setProfileActive] = useState(false)
 
   const mapaRef = useRef(null)
@@ -29,7 +32,7 @@ export default function App() {
     .reverse()
     .find(c => (
       c.origenAPI === true || c.crs?.fuente?.includes('AMVA ArcGIS REST')
-    ) && c.tipo !== 'lugares' && c.tipo !== 'suelo' && c.visible) ?? null
+    ) && c.tipo !== 'lugares' && c.tipo !== 'suelo' && c.tipo !== 'cobertura' && c.tipo !== 'teselado' && c.visible) ?? null
 
   const capaLugares = [...capas]
     .reverse()
@@ -116,9 +119,9 @@ return (
 
       <div className={`dashboard__mapa-contenedor ${activadoCapa ? 'dashboard__mapa-contenedor--menu-abierto' : ''}`}>
         {modoRenderer === 'leaflet' ? (
-          <Mapa ref={mapaRef} capas={capas} onMapReady={() => {}} onClickMapa={setCoordenada} />
+          <Mapa ref={mapaRef} capas={capas} onMapReady={() => {}} onClickMapa={setCoordenada} resaltados={resaltados} />
         ) : (
-          <Mapa capas={capas} onMapReady={() => {}} onClickMapa={setCoordenada} />
+          <Mapa capas={capas} onMapReady={() => {}} onClickMapa={setCoordenada} resaltados={resaltados} />
         )}
 
       
@@ -191,6 +194,20 @@ return (
 
             {historialAbierto && (
               <HistorialZonas setCapas={setCapas} />
+            )}
+          </div>
+
+          <div className="controles-mapa__grupo">
+            <button
+              className={`btn-toggle-estadisticas ${cercaAbierto ? 'activo' : ''}`}
+              onClick={() => setCercaAbierto(!cercaAbierto)}
+              title="¿Qué hay cerca?"
+            >
+              <MapPin size={18} />
+            </button>
+
+            {cercaAbierto && (
+              <QueHayCerca punto={coordenada} onResultados={setResaltados} />
             )}
           </div>
         </div>

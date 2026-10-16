@@ -60,14 +60,6 @@ function interpretarWKT(wktTexto) {
   return { epsg: null, fuente: 'sistema no reconocido en el archivo .prj' }
 }
 
-// Una posición en grados está acotada: |longitud| <= 180 y |latitud| <= 90. Un
-// archivo sin miembro "crs" que trae magnitudes de metros es casi con certeza un
-// sistema proyectado que perdió la etiqueta al exportarse, y asumir 4326 en ese
-// caso dibuja la capa fuera del planeta sin avisar.
-//
-// Se mira solo una muestra de vértices: recorrer miles de coordenadas en cada
-// carga no aporta nada, y con 200 ya es imposible que un archivo válido en
-// grados esté cerca del límite.
 const MUESTRA_MAXIMA = 200
 
 function posicionEnGrados(posicion) {

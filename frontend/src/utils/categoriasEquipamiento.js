@@ -1,10 +1,27 @@
-import {School, Hospital, Siren, Church, Bus, Recycle, Drama, Warehouse, Trees, Landmark, Lightbulb, Scale, Pin, UsersRound } from 'lucide-react'
+import {School, Hospital, Siren, Church, Bus, Recycle, Drama, Warehouse, Trees, Landmark, Lightbulb, Scale, Pin, UsersRound, GraduationCap, BookOpen, Baby, Wrench, Stethoscope, PawPrint, HeartPulse, Building2, Flower2 } from 'lucide-react'
 export const CATEGORIAS_EQUIPAMIENTO = {
   'SALUD': { color: '#ef4444', icono: Hospital, etiqueta: 'Salud' },
-  'EDUCACION': { color: '#2563eb', icono: School, etiqueta: 'Educación' },
+  'SALUD_HOSPITAL': { color: '#dc2626', icono: Hospital, etiqueta: 'Hospitales' },
+  'SALUD_CLINICA': { color: '#f43f5e', icono: Stethoscope, etiqueta: 'Clínicas' },
+  'SALUD_PUESTO': { color: '#fb7185', icono: HeartPulse, etiqueta: 'Centros y puestos de salud' },
+  'SALUD_VETERINARIA': { color: '#c026d3', icono: PawPrint, etiqueta: 'Veterinarias' },
+  'SALUD_OTROS': { color: '#9f1239', icono: Hospital, etiqueta: 'Otros de salud' },
+  'EDUCACION': { color: '#3b82f6', icono: School, etiqueta: 'Educación (general)' },
+  'EDUCACION_UNIVERSIDAD': { color: '#1e40af', icono: GraduationCap, etiqueta: 'Universidades' },
+  'EDUCACION_COLEGIO': { color: '#2563eb', icono: School, etiqueta: 'Colegios' },
+  'EDUCACION_ESCUELA': { color: '#0ea5e9', icono: BookOpen, etiqueta: 'Escuelas' },
+  'EDUCACION_JARDIN': { color: '#ec4899', icono: Baby, etiqueta: 'Jardines infantiles' },
+  'EDUCACION_FORMACION': { color: '#6366f1', icono: Wrench, etiqueta: 'Centros de formación' },
   'RECREACION': { color: '#16a34a', icono: Trees, etiqueta: 'Recreación' },
   'CULTURA': { color: '#7c3aed', icono: Drama, etiqueta: 'Cultura' },
   'CULTO': { color: '#f59e0b', icono: Church, etiqueta: 'Culto' },
+  'CULTO_PARROQUIA': { color: '#d97706', icono: Church, etiqueta: 'Parroquias' },
+  'CULTO_IGLESIA': { color: '#f59e0b', icono: Church, etiqueta: 'Iglesias y templos' },
+  'CULTO_CAPILLA': { color: '#fbbf24', icono: Church, etiqueta: 'Capillas' },
+  'CULTO_CRISTIANO': { color: '#0e7490', icono: Church, etiqueta: 'Iglesias cristianas y ministerios' },
+  'CULTO_CONVENTO': { color: '#b45309', icono: Building2, etiqueta: 'Conventos y seminarios' },
+  'CULTO_FUNERARIO': { color: '#6b7280', icono: Flower2, etiqueta: 'Servicios funerarios' },
+  'CULTO_OTROS': { color: '#ca8a04', icono: Church, etiqueta: 'Otros de culto' },
   'TRANSPORTE': { color: '#0d9488', icono: Bus, etiqueta: 'Transporte' },
   'SANITARIO': { color: '#65a30d', icono: Recycle, etiqueta: 'Sanitario' },
   'FUERZA PUBLICA': { color: '#1e293b', icono: Siren, etiqueta: 'Fuerza pública' },
@@ -35,6 +52,45 @@ const PALABRAS_CLAVE = [
   ['INSTITUCIONAL', ['institucional', 'alcaldia', 'alcaldía', 'administrativo', 'gobernacion', 'gobernación']],
 ]
 
+const SUBCATEGORIAS_EDUCACION = [
+  ['EDUCACION_UNIVERSIDAD', /\b(universidad|universitari[ao]|politecnico|tecnologico)\b/],
+  ['EDUCACION_JARDIN', /\b(jardin|infantil|preescolar|guarderia|primera infancia|buen comienzo|sala cuna)\b/],
+  ['EDUCACION_FORMACION', /\b(sena|formacion|capacitacion|academia)\b/],
+  ['EDUCACION_COLEGIO', /\b(colegio|liceo|gimnasio|institucion educativa|i\.?\s?e)\b/],
+  ['EDUCACION_ESCUELA', /\b(escuela|escuelas|centro educativo)\b/],
+]
+
+const REFINAMIENTOS = {
+  CULTO: {
+    defecto: 'CULTO_OTROS',
+    reglas: [
+      ['CULTO_FUNERARIO', /\b(morgue|morgues|anfiteatro|anfiteatros|cadaver|cadaveres|cementerio|cementerios|funerari[ao]s?|exequias|crematorio|crematorios|velacion|jardines? de paz)\b/],
+      ['CULTO_CONVENTO', /\b(convento|conventos|seminario|seminarios|monasterio|monasterios|claustro|noviciado|hermanas|hermanos|oblatas|carmelitas?|franciscan[ao]s?|salesian[ao]s?|jesuitas?|dominic[ao]s?|comunidad religiosa|casa de retiro)\b/],
+      ['CULTO_PARROQUIA', /\b(parroquia|parroquias|parroquial|casa cural|vicaria)\b/],
+      ['CULTO_CAPILLA', /\b(capilla|capillas|ermita|oratorio|gruta)\b/],
+      ['CULTO_CRISTIANO', /\b(ministerio|ministerios|mision|misiones|cuadrangular|pentecostal\w*|evangelic[ao]s?|cristian[ao]s?|bautista|adventista|menonita|testigos de jehova|idmji|iglesia de dios|adoracion|avivamiento|tabernaculo|casa de oracion|centro cristiano|salon del reino)\b/],
+      ['CULTO_IGLESIA', /\b(iglesia|iglesias|templo|templos|catedral|basilica|santuario|nuestra senora|ns|virgen|sagrado corazon|senor|eucaristi\w*|ascension|candelaria|reconciliacion|inmaculada|divino nino|san|santa|santo)\b/],
+    ]
+  },
+  SALUD: {
+    defecto: 'SALUD_OTROS',
+    reglas: [
+      ['SALUD_VETERINARIA', /\b(veterinari[ao]s?|zoonosis|mascotas?)\b/],
+      ['SALUD_HOSPITAL', /\b(hospital|hospitales|hospitalari[ao]|ese|empresa social del estado)\b|e\.s\.e/],
+      ['SALUD_CLINICA', /\b(clinica|clinicas|policlinica|policlinico|ips|eps|centro medico|consultorio|odontolog\w*|centro de fracturas|centro de especialistas|torre medica|urgencias|instituto del corazon|medicina alternativa|salud integral|seguro social|atencion inmediata)\b|i\.p\.s|e\.p\.s/],
+      ['SALUD_PUESTO', /\b(puesto de salud|punto de salud|centro de salud|centro de atencion|unidad primaria|unidad intermedia|unidad de atencion|upa|upss|caps|cami|uba|ubas|cis|centro integral de salud)\b|c\.a\.[ab]\b/],
+    ]
+  }
+}
+
+const PATRON_VETERINARIA = /\b(veterinari\w*|zoonosis|vet|clinica (?:de |para )?(?:mascotas|animales|caninos|felinos)|hospital (?:de |para )?(?:mascotas|animales))\b/
+const PATRON_NO_VETERINARIA = /\b(universidad|facultad|colegio|escuela|institucion educativa|politecnico|sena)\b/
+
+const CAMPOS_CLASIFICACION = new Set([
+  'NOMBRE', 'NMG', 'NOMBRE_EQUIP', 'NOM_EQUIP', 'NOMBRE_SITIO', 'NOMBRE_INSTITUCION', 'NOM',
+  'TIPO', 'SIMBOLOGIA', 'COMPONENTES'
+])
+
 function normalizarTexto(valor) {
   if (valor === null || valor === undefined) return ''
   return String(valor)
@@ -44,29 +100,71 @@ function normalizarTexto(valor) {
     .trim()
 }
 
-/**
- * Determina la categoría de un feature buscando palabras clave
- * en TODAS sus properties de texto (no solo un campo fijo), porque
- * distintos servicios ArcGIS del AMVA pueden nombrar el campo distinto
- * (SIMBOLOGIA, TIPO_EQUIP, NOMBRE, etc.) y el valor exacto varía
- * mucho de un municipio a otro.
- */
-export function obtenerCategoria(feature) {
-  // Si el feature ya trae categoría precalculada (AMVA en capaDesdeZona,
-  // o Overpass en capaLugaresDesdeZona), se respeta esa en vez de
-  // recalcularla por palabras clave — evita falsos positivos en
-  // features que no son de equipamientos AMVA.
-  if (feature?.properties?.categoria) return feature.properties.categoria
-
+function textoDeFeature(feature) {
   const properties = feature?.properties || {}
-
-  const textoCompleto = normalizarTexto(
+  return normalizarTexto(
     Object.values(properties).filter(v => typeof v === 'string' || typeof v === 'number').join(' ')
   )
+}
+
+function textoClasificacion(feature) {
+  const properties = feature?.properties || {}
+  const partes = []
+  Object.keys(properties).forEach((clave) => {
+    if (!CAMPOS_CLASIFICACION.has(clave.toUpperCase())) return
+    const valor = properties[clave]
+    if (typeof valor === 'string' || typeof valor === 'number') partes.push(valor)
+  })
+  return normalizarTexto(partes.join(' '))
+}
+
+function esVeterinaria(feature) {
+  const texto = textoClasificacion(feature)
+  return PATRON_VETERINARIA.test(texto) && !PATRON_NO_VETERINARIA.test(texto)
+}
+
+function refinarEducacion(feature, texto) {
+  const t = texto ?? textoDeFeature(feature)
+  for (const [categoria, patron] of SUBCATEGORIAS_EDUCACION) {
+    if (patron.test(t)) return categoria
+  }
+  return 'EDUCACION'
+}
+
+function refinarCategoria(base, feature) {
+  const refinamiento = REFINAMIENTOS[base]
+  if (!refinamiento) return base
+  const texto = textoClasificacion(feature)
+  for (const [categoria, patron] of refinamiento.reglas) {
+    if (patron.test(texto)) return categoria
+  }
+  return refinamiento.defecto
+}
+
+export function esEducacion(categoria) {
+  return typeof categoria === 'string' && categoria.startsWith('EDUCACION')
+}
+
+export function obtenerCategoria(feature) {
+
+  const precalculada = feature?.properties?.categoria
+
+  const baseEsEquipamiento = !precalculada || CATEGORIAS_EQUIPAMIENTO[precalculada] !== undefined
+  if (baseEsEquipamiento && !esEducacion(precalculada) && esVeterinaria(feature)) {
+    return 'SALUD_VETERINARIA'
+  }
+
+  if (precalculada) {
+    if (precalculada === 'EDUCACION') return refinarEducacion(feature)
+    return refinarCategoria(precalculada, feature)
+  }
+
+  const textoCompleto = textoDeFeature(feature)
 
   for (const [categoria, palabras] of PALABRAS_CLAVE) {
     if (palabras.some(palabra => textoCompleto.includes(palabra))) {
-      return categoria
+      if (categoria === 'EDUCACION') return refinarEducacion(feature, textoCompleto)
+      return refinarCategoria(categoria, feature)
     }
   }
 
@@ -77,27 +175,14 @@ export function estiloCategoria(categoria) {
   return CATEGORIAS_EQUIPAMIENTO[categoria] || CATEGORIAS_EQUIPAMIENTO.DEFAULT
 }
 
-// Nombres de campo donde suele venir el nombre propio del equipamiento
-// (varía por municipio/servicio, igual que con la categoría — por eso
-// se prueban varios candidatos en orden de prioridad).
 const CAMPOS_NOMBRE = ['NMG', 'NOMBRE', 'NOMBRE_EQUIP', 'NOM_EQUIP', 'NOMBRE_SITIO', 'NOMBRE_INSTITUCION', 'NOM']
 
-// Nombres de campo donde suele venir la dirección.
 const CAMPOS_DIRECCION = ['DIRECCION', 'DIRECCCION', 'DIR']
 
-// Nombres de campo donde suele venir un teléfono de contacto.
 const CAMPOS_TELEFONO = ['NO_TELEFONO', 'TELEFONO', 'TEL']
 
-// Nombres de campo donde puede venir un sitio web (Overpass sí lo trae,
-// el AMVA casi nunca).
 const CAMPOS_WEBSITE = ['WEBSITE', 'SITIO_WEB', 'URL', 'PAGINA_WEB']
 
-/**
- * Busca en las properties de un feature el primer campo cuyo nombre
- * (sin importar mayúsculas/minúsculas) coincida con alguno de los
- * candidatos, y que además tenga un valor no vacío. Se usa tanto para
- * el nombre como para la dirección y el teléfono.
- */
 function buscarCampo(properties, candidatos) {
   const claves = Object.keys(properties)
   for (const candidato of candidatos) {
@@ -110,27 +195,18 @@ function buscarCampo(properties, candidatos) {
   return null
 }
 
-/**
- * Devuelve el nombre propio del equipamiento (ej. "Hospital General de
- * Sabaneta") si el servicio del AMVA lo trae, o null si no se
- * encontró ningún campo reconocible — en ese caso, la interfaz debe
- * caer de vuelta a mostrar solo la categoría genérica.
- */
 export function obtenerNombreEquipamiento(feature) {
   return buscarCampo(feature?.properties || {}, CAMPOS_NOMBRE)
 }
 
-/** Devuelve la dirección del equipamiento, o null si no viene en el dato. */
 export function obtenerDireccionEquipamiento(feature) {
   return buscarCampo(feature?.properties || {}, CAMPOS_DIRECCION)
 }
 
-/** Devuelve el teléfono del equipamiento, o null si no viene en el dato. */
 export function obtenerTelefonoEquipamiento(feature) {
   return buscarCampo(feature?.properties || {}, CAMPOS_TELEFONO)
 }
 
-/** Devuelve el website del equipamiento si el dato lo trae, o null. */
 export function obtenerWebsiteEquipamiento(feature) {
   return buscarCampo(feature?.properties || {}, CAMPOS_WEBSITE)
 }

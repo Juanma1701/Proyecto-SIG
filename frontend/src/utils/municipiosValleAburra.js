@@ -1,16 +1,5 @@
-// src/utils/municipiosValleAburra.js
 import { point, distance } from '@turf/turf'
 
-/**
- * Municipios del Valle de Aburrá, con su centroide aproximado
- * y un radio de cobertura estimado (en km) usado como heurística
- * para saber si una zona definida por el usuario podría intersectar
- * ese municipio, sin necesitar sus límites oficiales.
- *
- * `slug` debe coincidir (sin tildes/espacios) con cómo aparece
- * el municipio en el nombre de los servicios ArcGIS del AMVA,
- * ya que fetchArcGIS.js normaliza y compara contra esto.
- */
 export const MUNICIPIOS_VALLE_ABURRA = [
   { nombre: 'Barbosa',     slug: 'Barbosa',    lat: 6.4378, lng: -75.3308, radioAprox: 8 },
   { nombre: 'Girardota',   slug: 'Girardota',  lat: 6.3775, lng: -75.4453, radioAprox: 7 },

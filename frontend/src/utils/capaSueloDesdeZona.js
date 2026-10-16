@@ -1,133 +1,117 @@
-// src/utils/capaSueloDesdeZona.js
 import { toast } from 'sonner'
-import * as turf from '@turf/turf'
-import { municipiosEnZona } from './municipiosValleAburra'
-import { resolverCapasSueloPorMunicipio, fetchAreasProtegidasEnZona, fetchCapaArcGIS } from './fetchSuelo'
-import { obtenerCategoriaSuelo, estiloCategoriaSuelo } from './categoriasSuelo'
+import { supabase } from '../lib/supabaseClient'
+import { estiloCategoriaSuelo } from './categoriasSuelo'
 
-/**
- * Recorta features de POLÍGONO al círculo de la zona usando Turf.js.
- * `filtrarPorZona` (geoFiltros.js) está hecho para puntos y falla con
- * polígonos — cuando eso pasa, terminan mostrándose sin recortar (el
- * municipio completo en vez de solo la zona). Esta versión SÍ recorta
- * la geometría real al círculo, no solo decide si incluir el feature
- * completo o no.
- */
-function recortarPoligonosAZona(geojson, centro, radioKm) {
-  const circulo = turf.circle([centro.lng, centro.lat], radioKm, { units: 'kilometers' })
-  const recortados = []
+const RADIO_MAX_KM = 5 
+const VIGENCIA_CACHE_MS = 10 * 60 * 1000
 
-  for (const feature of geojson.features || []) {
-    try {
-      if (!turf.booleanIntersects(feature, circulo)) continue
+const cache = new Map() 
+const enVuelo = new Map() 
 
-      const interseccion = turf.intersect(turf.featureCollection([feature, circulo]))
-      if (interseccion) {
-        recortados.push({ ...interseccion, properties: feature.properties })
-      }
-    } catch {
-      // Geometría problemática (auto-intersecciones, etc.) — se
-      // descarta ese feature puntual en vez de romper todo el resto.
-      continue
-    }
+const ORDEN_CATEGORIAS = ['URBANO', 'EXPANSION_URBANA', 'RURAL', 'PROTECCION', 'RIESGO', 'PATRIMONIO']
+
+function posicionOrden(categoria) {
+  const i = ORDEN_CATEGORIAS.indexOf(categoria)
+  return i === -1 ? ORDEN_CATEGORIAS.length : i
+}
+
+const clavePedido = (centro, radioKm) => `${centro.lat.toFixed(5)},${centro.lng.toFixed(5)},${radioKm}`
+
+const esperar = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+async function pedirSuelo(centro, radioKm) {
+  const parametros = { p_lat: centro.lat, p_lng: centro.lng, p_radio_km: radioKm }
+  let ultimoError
+
+  for (let intento = 0; intento < 2; intento++) {
+    const { data, error } = await supabase.rpc('suelo_en_zona', parametros)
+    if (!error) return data
+    ultimoError = error
+    if (intento === 0) await esperar(800)
   }
 
-  return recortados
+  throw new Error(ultimoError?.message || 'No se pudo consultar el uso de suelo')
+}
+
+async function obtenerSuelo(centro, radioKm) {
+  const clave = clavePedido(centro, radioKm)
+
+  const guardado = cache.get(clave)
+  if (guardado && guardado.hasta > Date.now()) return guardado.datos
+
+  if (enVuelo.has(clave)) return enVuelo.get(clave)
+
+  const promesa = pedirSuelo(centro, radioKm)
+    .then((datos) => {
+      cache.set(clave, { datos, hasta: Date.now() + VIGENCIA_CACHE_MS })
+      return datos
+    })
+    .finally(() => enVuelo.delete(clave))
+
+  enVuelo.set(clave, promesa)
+  return promesa
 }
 
 export async function capaSueloDesdeZona(centro, radioKm) {
-  const municipios = municipiosEnZona(centro, radioKm)
-  const features = []
-  const serviciosConsultados = []
+  const radio = Math.min(Number(radioKm), RADIO_MAX_KM)
 
-  // Por municipio: puede haber VARIAS capas relevantes (clasificación
-  // urbano/rural, riesgo, patrimonio...), no solo una — se consultan todas.
-  const resultadosMunicipio = await Promise.allSettled(
-    municipios.map(async (municipio) => {
-      const capasEncontradas = await resolverCapasSueloPorMunicipio(municipio.nombre)
-
-      const consultas = await Promise.allSettled(
-        capasEncontradas.map(async (resuelto) => {
-          const geojson = await fetchCapaArcGIS(resuelto.url)
-          return { resuelto, geojson }
-        })
-      )
-
-      return { municipio, consultas, capasEncontradas }
-    })
-  )
-
-  resultadosMunicipio.forEach((resultado) => {
-    if (resultado.status !== 'fulfilled') return
-    const { municipio, consultas, capasEncontradas } = resultado.value
-
-    if (capasEncontradas.length === 0) {
-      toast.warning(`${municipio.nombre} no publica capas de uso de suelo en el AMVA`)
-    }
-
-    consultas.forEach((consulta) => {
-      if (consulta.status !== 'fulfilled') {
-        toast.error(`Error consultando suelo en ${municipio.nombre}: ${consulta.reason?.message || consulta.reason}`)
-        return
-      }
-
-      const { resuelto, geojson } = consulta.value
-      serviciosConsultados.push(`${municipio.nombre}: ${resuelto.nombreCapa}`)
-
-      const recortados = recortarPoligonosAZona(geojson, centro, radioKm).map((f) => {
-        const categoria = obtenerCategoriaSuelo(f)
-        const estilo = estiloCategoriaSuelo(categoria)
-        return {
-          ...f,
-          properties: {
-            ...f.properties,
-            municipio: municipio.nombre,
-            categoria,
-            categoriaEtiqueta: estilo.etiqueta,
-            categoriaColor: estilo.color
-          }
-        }
-      })
-
-      features.push(...recortados)
-    })
-  })
-
-  // Áreas Protegidas: cubre todo el valle en un solo servicio
+  let datos
   try {
-    const geojsonProtegidas = await fetchAreasProtegidasEnZona(centro, radioKm)
-    const recortadas = recortarPoligonosAZona(geojsonProtegidas, centro, radioKm).map((f) => ({
-      ...f,
-      properties: {
-        ...f.properties,
-        categoria: 'PROTECCION',
-        categoriaEtiqueta: 'Área de protección',
-        categoriaColor: '#dc2626'
-      }
-    }))
-    features.push(...recortadas)
+    datos = await obtenerSuelo(centro, radio)
   } catch (error) {
-    toast.error('No se pudo consultar Áreas Protegidas: ' + error.message)
-  }
-
-  console.log('[Suelo] Servicios/capas consultados:', serviciosConsultados)
-
-  if (features.length === 0) {
-    toast.error('No se encontró información de uso de suelo para esta zona')
+    toast.error('No se pudo consultar el uso de suelo: ' + error.message)
     return null
   }
 
-  const nuevaCapa = {
+  const crudas = datos?.features || []
+  if (crudas.length === 0) {
+    toast.error('No hay información de uso de suelo para esta zona (solo está cargado el Valle de Aburrá)')
+    return null
+  }
+
+  const features = crudas
+    .map((f) => {
+      const p = f.properties || {}
+      const categoria = String(p.categoria || '').toUpperCase()
+      const estilo = estiloCategoriaSuelo(categoria)
+      return {
+        ...f,
+        properties: {
+          ...p,
+          categoria,
+          categoriaEtiqueta: `${estilo.etiqueta} · ${p.porcentaje_zona} % de la zona`,
+          categoriaColor: estilo.color
+        }
+      }
+    })
+    .sort((a, b) => posicionOrden(a.properties.categoria) - posicionOrden(b.properties.categoria))
+
+  const resumenSuelo = features.map((f) => {
+    const p = f.properties
+    const estilo = estiloCategoriaSuelo(p.categoria)
+    return {
+      categoria: p.categoria,
+      etiqueta: estilo.etiqueta,
+      color: estilo.color,
+      areaKm2: p.area_km2,
+      porcentaje: p.porcentaje_zona,
+      poligonos: p.poligonos
+    }
+  })
+
+  return {
     id: crypto.randomUUID(),
     nombre: `Uso del suelo (radio ${radioKm} km)`,
     archivoOriginal: null,
     tipo: 'suelo',
     geojson: { type: 'FeatureCollection', features },
-    crs: { epsg: 4326, fuente: 'AMVA POT / Áreas Protegidas' },
+    crs: { epsg: 4326, fuente: 'AMVA POT (cargado en Supabase)' },
     visible: true,
     guardadaEnNube: false,
-    origenAPI: true
+    origenAPI: true,
+    zonaCentro: { lat: centro.lat, lng: centro.lng },
+    zonaRadioKm: Number(radioKm),
+    zonaKm2: datos.zona_km2,
+    resumenSuelo
   }
-
-  return nuevaCapa
 }
