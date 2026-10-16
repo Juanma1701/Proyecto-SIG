@@ -1,12 +1,5 @@
-// utils/zonasGuardadas.js
 import { supabase } from '../lib/supabaseClient'
 
-/**
- * Guarda la zona actual (centro, radio) junto con una "foto" de los
- * equipamientos y lugares que tenía en ese momento, para poder
- * recargarla después sin depender de que el AMVA/Overpass respondan
- * igual (o sigan disponibles) en el futuro.
- */
 export async function guardarZona(userId, zona, capaEquipamiento, capaLugares) {
   const { data: coordenada, error: errorCoordenada } = await supabase
     .from('coordenadas_capturadas')
@@ -36,7 +29,6 @@ export async function guardarZona(userId, zona, capaEquipamiento, capaLugares) {
   }
 }
 
-/** Lista las zonas guardadas del usuario, más recientes primero. */
 export async function listarZonas(userId) {
   const { data, error } = await supabase
     .from('zonas')
@@ -48,17 +40,11 @@ export async function listarZonas(userId) {
   return data
 }
 
-/** Elimina una zona guardada por su id. */
 export async function eliminarZonaGuardada(id) {
   const { error } = await supabase.from('zonas').delete().eq('id', id)
   if (error) throw error
 }
 
-/**
- * Convierte una fila guardada de Supabase de vuelta en las capas que
- * espera el resto de la app (zona + equipamientos + lugares), listas
- * para agregarse al array `capas` y mostrarse en el mapa.
- */
 export function capasDesdeZonaGuardada(fila) {
   const zonaId = crypto.randomUUID()
   const centro = { lat: fila.centro_lat, lng: fila.centro_lng }

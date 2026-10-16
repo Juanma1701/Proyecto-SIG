@@ -15,6 +15,7 @@ import {
 } from '../utils/categoriasEquipamiento'
 import { CATEGORIAS_LUGARES, estiloCategoriaLugar } from '../utils/categoriasLugares'
 import { buscarWebsitePorNombre } from '../utils/fetchOverpass'
+import { geometriaEquipamiento } from '../utils/cercania'
 
 
 import iconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png'
@@ -166,59 +167,107 @@ function armarPopupHTML(feature, estado) {
   `
 }
 
-const Mapa = forwardRef(function Mapa({ capas, onMapReady, onClickMapa }, refExterno) {
+// Espera a que el mapa termine de cargar los cuadros (tiles) tras mover la vista
+function esperarTiles(capaTiles) {
+  return new Promise((resolve) => {
+    if (!capaTiles) {
+      setTimeout(resolve, 600)
+      return
+    }
+    let terminado = false
+    const terminar = () => {
+      if (terminado) return
+      terminado = true
+      clearTimeout(limite)
+      capaTiles.off('load', terminar)
+      setTimeout(resolve, 300)
+    }
+    const limite = setTimeout(terminar, 4000)
+    capaTiles.on('load', terminar)
+  })
+}
+
+const Mapa = forwardRef(function Mapa({ capas, onMapReady, onClickMapa, resaltados }, refExterno) {
   const mapRef = useRef(null)
   const contenedorRef = useRef(null)
   const capasLeafletRef = useRef({})
   const marcadorRef = useRef(null)
   const onClickMapaRef = useRef(onClickMapa)
   const onMapReadyRef = useRef(onMapReady)
-  const enriquecimientoRef = useRef({}) // cache por feature.id: 'cargando' | { website }
+  const enriquecimientoRef = useRef({})
   const ajustesVistaRef = useRef(new Set())
+  const resaltadosLayerRef = useRef(null)
+  const tileLayerRef = useRef(null)
 
-  // Expone hacia afuera: el nodo DOM del contenedor (para capturarlo con
-  // html2canvas), y dos funciones para desactivar/restaurar el clustering
-  // justo antes/después de una captura — así la foto muestra cada punto
-  // individual en su calle exacta, en vez de burbujas agrupadas con número.
+  const poligonoClicRef = useRef(null)
+  const idPoligonoRef = useRef(null)
+
+  function quitarPoligonoClic() {
+    if (poligonoClicRef.current && mapRef.current) {
+      mapRef.current.removeLayer(poligonoClicRef.current)
+    }
+    poligonoClicRef.current = null
+  }
+
   useImperativeHandle(refExterno, () => ({
     getContenedor: () => contenedorRef.current,
-    prepararCaptura: () => {
+
+    prepararCaptura: async (zona) => {
       const mapa = mapRef.current
-      if (!mapa) return []
-      const temporales = []
-      const marcadoresConTooltipAbierto = []
+      if (!mapa) return null
+
+      const estado = {
+        centro: mapa.getCenter(),
+        zoom: mapa.getZoom(),
+        temporales: [],
+        controles: []
+      }
+
+      mapa.getContainer().querySelectorAll('.leaflet-control-zoom').forEach((el) => {
+        estado.controles.push({ el, display: el.style.display })
+        el.style.display = 'none'
+      })
 
       Object.values(capasLeafletRef.current).forEach((capaLeaflet) => {
-        if (capaLeaflet instanceof L.MarkerClusterGroup) {
+        if (capaLeaflet instanceof L.MarkerClusterGroup && mapa.hasLayer(capaLeaflet)) {
           const marcadores = capaLeaflet.getLayers()
           mapa.removeLayer(capaLeaflet)
           const grupoPlano = L.layerGroup(marcadores).addTo(mapa)
-          temporales.push({ original: capaLeaflet, temporal: grupoPlano })
-
-          // Fuerza que el nombre (tooltip) quede visible en la foto,
-          // no solo al pasar el mouse — si no, la imagen exportada
-          // solo muestra puntos de colores sin decir qué son.
-          marcadores.forEach((marcador) => {
-            if (marcador.getTooltip && marcador.getTooltip()) {
-              marcador.openTooltip()
-              marcadoresConTooltipAbierto.push(marcador)
-            }
-          })
+          estado.temporales.push({ original: capaLeaflet, temporal: grupoPlano })
         }
       })
 
-      return { temporales, marcadoresConTooltipAbierto }
+      let vistaCambio = false
+      if (zona?.centro && zona?.radioKm) {
+        const antes = mapa.getBounds()
+        const limites = L.latLng(zona.centro.lat, zona.centro.lng).toBounds(zona.radioKm * 2000)
+        mapa.fitBounds(limites, { padding: [24, 24], animate: false })
+        vistaCambio = !antes.equals(mapa.getBounds(), 1e-6)
+      }
+
+      if (vistaCambio) {
+        await esperarTiles(tileLayerRef.current)
+      } else {
+        await new Promise((resolve) => setTimeout(resolve, 400))
+      }
+
+      return estado
     },
-    restaurarCaptura: ({ temporales, marcadoresConTooltipAbierto }) => {
+
+    restaurarCaptura: (estado) => {
       const mapa = mapRef.current
-      if (!mapa) return
+      if (!mapa || !estado) return
 
-      marcadoresConTooltipAbierto.forEach((marcador) => marcador.closeTooltip())
-
-      temporales.forEach(({ original, temporal }) => {
+      estado.temporales.forEach(({ original, temporal }) => {
         mapa.removeLayer(temporal)
         original.addTo(mapa)
       })
+
+      estado.controles.forEach(({ el, display }) => {
+        el.style.display = display
+      })
+
+      mapa.setView(estado.centro, estado.zoom, { animate: false })
     }
   }), [])
 
@@ -232,7 +281,7 @@ const Mapa = forwardRef(function Mapa({ capas, onMapReady, onClickMapa }, refExt
 
     const mapa = L.map(contenedorRef.current).setView([6.25, -75.56], 12) // Medellín
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    tileLayerRef.current = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(mapa)
 
@@ -246,6 +295,7 @@ const Mapa = forwardRef(function Mapa({ capas, onMapReady, onClickMapa }, refExt
       }
     })
 
+    // Etiquetas de límites (barrios, veredas...): se muestran solo desde cierto zoom
     mapa.on('zoomend', () => {
       Object.values(capasLeafletRef.current).forEach((capaLeaflet) => {
         const zoomEtiquetas = capaLeaflet.zoomEtiquetasLimites
@@ -267,6 +317,8 @@ const Mapa = forwardRef(function Mapa({ capas, onMapReady, onClickMapa }, refExt
       mapa.remove()
       mapRef.current = null
       marcadorRef.current = null
+      poligonoClicRef.current = null
+      idPoligonoRef.current = null
     }
   }, [])
 
@@ -299,7 +351,8 @@ const Mapa = forwardRef(function Mapa({ capas, onMapReady, onClickMapa }, refExt
           weight: 2,
           fillColor: '#60a5fa',
           fillOpacity: 0.18,
-          dashArray: '8 8'
+          dashArray: '8 8',
+          interactive: false
         }).addTo(mapa)
 
         capasLeafletRef.current[capa.id] = layer
@@ -312,6 +365,7 @@ const Mapa = forwardRef(function Mapa({ capas, onMapReady, onClickMapa }, refExt
         return
       }
 
+      // Límites administrativos (barrios, veredas, comunas, corregimientos)
       if (capa.tipo === 'limites') {
         const existing = capasLeafletRef.current[capa.id]
         if (existing) {
@@ -372,8 +426,36 @@ const Mapa = forwardRef(function Mapa({ capas, onMapReady, onClickMapa }, refExt
         return
       }
 
-      // Suelo/POT: son polígonos (áreas), no puntos — se dibujan con
-      // L.geoJSON en vez de circleMarker, coloreados por categoría.
+      if (capa.tipo === 'cobertura') {
+        const existing = capasLeafletRef.current[capa.id]
+        if (existing) {
+          mapa.removeLayer(existing)
+          delete capasLeafletRef.current[capa.id]
+        }
+
+        const layer = L.geoJSON(capa.geojson, {
+          style: {
+            color: '#b91c1c',
+            weight: 1.5,
+            dashArray: '4 4',
+            fillColor: '#ef4444',
+            fillOpacity: 0.3
+          },
+          onEachFeature: (feature, capaLeaflet) => {
+            capaLeaflet.bindTooltip(feature.properties?.categoriaEtiqueta || 'Sin cobertura', { sticky: true })
+          }
+        })
+
+        capasLeafletRef.current[capa.id] = layer
+
+        if (capa.visible) {
+          if (!mapa.hasLayer(layer)) layer.addTo(mapa)
+        } else if (mapa.hasLayer(layer)) {
+          mapa.removeLayer(layer)
+        }
+        return
+      }
+
       if (capa.tipo === 'suelo') {
         const existing = capasLeafletRef.current[capa.id]
         if (existing) {
@@ -405,8 +487,47 @@ const Mapa = forwardRef(function Mapa({ capas, onMapReady, onClickMapa }, refExt
         return
       }
 
-      if (capasLeafletRef.current[capa.id]) {
-        capasLeafletRef.current[capa.id].clearLayers()
+      if (capa.tipo === 'teselado') {
+        const existing = capasLeafletRef.current[capa.id]
+        if (existing) {
+          mapa.removeLayer(existing)
+          delete capasLeafletRef.current[capa.id]
+        }
+
+        // Panel propio por debajo de los puntos, para que los hexágonos no tapen los clics
+        if (!mapa.getPane('teselado')) {
+          mapa.createPane('teselado')
+          mapa.getPane('teselado').style.zIndex = 350
+        }
+
+        const layer = L.geoJSON(capa.geojson, {
+          pane: 'teselado',
+          style: (feature) => ({
+            color: '#ffffff',
+            weight: 1,
+            opacity: 0.8,
+            fillColor: feature.properties?.categoriaColor || '#6baed6',
+            fillOpacity: 0.6
+          }),
+          onEachFeature: (feature, capaLeaflet) => {
+            capaLeaflet.bindTooltip(feature.properties?.categoriaEtiqueta || 'Celda', { sticky: true })
+          }
+        })
+
+        capasLeafletRef.current[capa.id] = layer
+
+        if (capa.visible) {
+          if (!mapa.hasLayer(layer)) layer.addTo(mapa)
+        } else if (mapa.hasLayer(layer)) {
+          mapa.removeLayer(layer)
+        }
+        return
+      }
+
+      const anterior = capasLeafletRef.current[capa.id]
+      if (anterior) {
+        mapa.removeLayer(anterior)
+        delete capasLeafletRef.current[capa.id]
       }
 
       const hiddenCategories = new Set(capa.hiddenCategories || [])
@@ -415,15 +536,14 @@ const Mapa = forwardRef(function Mapa({ capas, onMapReady, onClickMapa }, refExt
         return !hiddenCategories.has(cat)
       })
 
-      // Clustering: agrupa marcadores cercanos en burbujas con contador
-      // cuando hay muchos puntos juntos, en vez de amontonarlos sin poder
-      // distinguir nada. Se separan solos al hacer zoom.
       const markers = L.markerClusterGroup({
-        maxClusterRadius: 30, // antes 50 — agrupa menos agresivo
-        disableClusteringAtZoom: 17, // a partir de este zoom, siempre puntos sueltos
+        maxClusterRadius: 30,
+        disableClusteringAtZoom: 17,
         spiderfyOnMaxZoom: true,
         showCoverageOnHover: false
       })
+
+      const listaMarcadores = []
 
       features.forEach((feature) => {
         const centro = obtenerCentroGeometria(feature.geometry)
@@ -440,7 +560,7 @@ const Mapa = forwardRef(function Mapa({ capas, onMapReady, onClickMapa }, refExt
         })
 
         const nombreTooltip = obtenerNombreEquipamiento(feature)
-        marcador.bindTooltip(nombreTooltip || etiqueta, {
+        marcador.bindTooltip(escaparHTML(nombreTooltip || etiqueta), {
           direction: 'top',
           opacity: 0.9
         })
@@ -476,20 +596,112 @@ const Mapa = forwardRef(function Mapa({ capas, onMapReady, onClickMapa }, refExt
           })
         }
 
-        markers.addLayer(marcador)
+        const esUUID = typeof feature.id === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(feature.id)
+        if (esCapaAMVA && esUUID && feature.geometry?.type === 'Point') {
+          marcador.on('popupopen', async () => {
+            const miId = feature.id
+            idPoligonoRef.current = miId
+            try {
+              const f = await geometriaEquipamiento(miId)
+              if (idPoligonoRef.current !== miId) return // ya cerraron o abrieron otro
+              const tipo = f?.geometry?.type
+              if (tipo !== 'Polygon' && tipo !== 'MultiPolygon') return
+              quitarPoligonoClic()
+              poligonoClicRef.current = L.geoJSON(f, {
+                style: { color: '#2563eb', weight: 2, fillColor: '#3b82f6', fillOpacity: 0.2 },
+                interactive: false
+              }).addTo(mapRef.current)
+            } catch (error) {
+              console.warn('[Mapa] no se pudo traer el polígono', error)
+            }
+          })
+
+          marcador.on('popupclose', () => {
+            if (idPoligonoRef.current === feature.id) {
+              idPoligonoRef.current = null
+              quitarPoligonoClic()
+            }
+          })
+        }
+
+        listaMarcadores.push(marcador)
       })
 
-      markers.addTo(mapa)
+      markers.addLayers(listaMarcadores)
       capasLeafletRef.current[capa.id] = markers
 
-      const layer = capasLeafletRef.current[capa.id]
       if (capa.visible) {
-        if (!mapa.hasLayer(layer)) mapa.addLayer(layer)
-      } else {
-        if (mapa.hasLayer(layer)) mapa.removeLayer(layer)
+        markers.addTo(mapa)
       }
     })
   }, [capas])
+
+  useEffect(() => {
+    const mapa = mapRef.current
+    if (!mapa) return
+
+    if (resaltadosLayerRef.current) {
+      mapa.removeLayer(resaltadosLayerRef.current)
+      resaltadosLayerRef.current = null
+    }
+
+    if (!resaltados || !resaltados.items || resaltados.items.length === 0) return
+
+    const grupo = L.layerGroup()
+    const puntos = []
+
+    if (resaltados.centro) {
+      const { lat, lng } = resaltados.centro
+      L.circleMarker([lat, lng], {
+        radius: 8,
+        color: '#ffffff',
+        weight: 2,
+        fillColor: '#facc15',
+        fillOpacity: 0.95
+      })
+        .bindTooltip('Punto de búsqueda')
+        .addTo(grupo)
+      puntos.push([lat, lng])
+    }
+
+    resaltados.items.forEach((item, i) => {
+      const textoDistancia = Math.round(item.distancia_m) === 0 ? 'dentro' : `${Math.round(item.distancia_m)} m`
+      const tooltip = `${i + 1}. ${escaparHTML(item.nombre)} · ${textoDistancia}`
+
+      if (item.geojson) {
+        L.geoJSON(item.geojson, {
+          style: {
+            color: '#facc15',
+            weight: 3,
+            opacity: 0.95,
+            fillColor: '#facc15',
+            fillOpacity: 0.15
+          }
+        })
+          .bindTooltip(tooltip, { sticky: true })
+          .addTo(grupo)
+      }
+
+      L.circleMarker([item.lat, item.lng], {
+        radius: 13,
+        color: '#facc15',
+        weight: 3,
+        fillColor: '#facc15',
+        fillOpacity: 0.2
+      })
+        .bindTooltip(tooltip, { direction: 'top' })
+        .addTo(grupo)
+
+      puntos.push([item.lat, item.lng])
+    })
+
+    grupo.addTo(mapa)
+    resaltadosLayerRef.current = grupo
+
+    if (puntos.length > 0) {
+      mapa.fitBounds(L.latLngBounds(puntos), { padding: [60, 60], maxZoom: 17 })
+    }
+  }, [resaltados])
 
   return <div ref={contenedorRef} className="mapa-contenedor" />
 })

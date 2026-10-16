@@ -155,3 +155,14 @@
     padding: 12px;
   }
 }
+
+.filtro-categorias-sidebar__contenido {
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.filtro-categorias-sidebar__list {
+  width: max-content;
+  min-width: 100%;
+  padding-bottom: 8px;
+}

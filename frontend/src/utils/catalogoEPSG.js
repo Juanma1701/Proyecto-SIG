@@ -1,14 +1,5 @@
 import proj4 from 'proj4'
 
-// Fuente única de verdad sobre los sistemas de referencia que la app soporta.
-//
-// Antes esta información vivía repartida en dos lugares que se desincronizaban:
-// la tabla de definiciones proj4 (reproyectarGeoJSON.js) y la lista
-// SISTEMAS_PROYECTADOS (PanelCapas.jsx). Un EPSG podía estar definido en la
-// primera tabla y faltar en la segunda, y entonces el motor lo trataba como
-// geográfico: volcaba metros sobre la geometría viva de la capa y rompía el
-// mapa. Aquí vive el par definición + clasificación juntos, así no puede pasar.
-
 export const GRUPOS_EPSG = [
   { id: 'geograficos', nombre: 'Geográficos (grados decimales)' },
   { id: 'colombia-magna', nombre: 'Colombia — MAGNA-SIRGAS (metros)' },
@@ -131,8 +122,6 @@ export function esGeografico(epsg) {
   return obtenerEPSG(epsg)?.proyectado === false
 }
 
-// Leaflet dibuja exclusivamente en grados: cualquier sistema proyectado llega
-// solo como descarga, nunca reemplaza la geometría que se está pintando.
 export function esDibujableEnMapa(epsg) {
   return esGeografico(epsg)
 }

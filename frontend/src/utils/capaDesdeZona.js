@@ -1,34 +1,38 @@
-
 import { toast } from 'sonner'
 import { municipiosEnZona } from './municipiosValleAburra'
 import { filtrarPorZona } from './geoFiltros'
 import { resolverCapaPorMunicipio, fetchCapaArcGIS } from './fetchArcGIS'
 import { obtenerCategoria, estiloCategoria } from './categoriasEquipamiento'
+import { buscarEquipamientosOSM } from './fetchOverpass'
+import { equipamientosEnZona, esSobrecarga, MENSAJE_SATURADO } from './cercania'
 
-/**
- * Dado un centro y un radio definidos por el usuario en "Mapear una zona",
- * determina qué municipios del Valle de Aburrá aplican, resuelve y consulta
- * dinámicamente sus servicios ArcGIS REST de equipamientos urbanos, filtra
- * los resultados al radio exacto, y arma un objeto `capa` listo para
- * sumarse al array `capas` que ya consume Mapa.jsx.
- *
- * @param {{ lat: number, lng: number }} centro
- * @param {number} radioKm
- * @param {string} nombreCapaBuscada 
- * @returns {Promise<object|null>} 
- */
-export async function capaDesdeZona(centro, radioKm, nombreCapaBuscada = 'Equipamientos Urbanos') {
-  const municipios = municipiosEnZona(centro, radioKm)
+function normalizar(texto) {
+  return String(texto || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+}
 
-  if (municipios.length === 0) {
-    toast.error('No hay municipios del Valle de Aburrá en esa zona')
-    return null
+const MUNICIPIOS_SIN_CAPA_AMVA = new Set(['bello'])
+
+function enriquecer(feature, extra = {}) {
+  const categoria = obtenerCategoria(feature)
+  const estilo = estiloCategoria(categoria)
+  return {
+    ...feature,
+    properties: {
+      ...feature.properties,
+      ...extra,
+      categoria,
+      categoriaEtiqueta: estilo.etiqueta,
+      categoriaColor: estilo.color,
+      categoriaIcono: estilo.icono
+    }
   }
+}
 
-  // Por cada municipio: resolver dónde está su capa de equipamientos,
-  // y luego consultarla. Son dos pasos async por municipio, así que
-  // los encadenamos dentro de una sola promesa por municipio para
-  // poder usar allSettled y que un municipio con error no tumbe a los demás.
+async function consultarAMVA(municipios, centro, radioKm, nombreCapaBuscada) {
   const resultados = await Promise.allSettled(
     municipios.map(async (municipio) => {
       const { url, epsg, servicio } = await resolverCapaPorMunicipio(municipio.nombre, nombreCapaBuscada)
@@ -52,71 +56,142 @@ export async function capaDesdeZona(centro, radioKm, nombreCapaBuscada = 'Equipa
 
     const { epsg, servicio, geojson } = resultado.value
 
-    console.log('[AMVA] GeoJSON recibido', {
-      municipio: municipio.nombre,
-      totalFeatures: geojson?.features?.length || 0,
-      sample: geojson?.features?.[0]?.properties || null,
-      keys: geojson?.features?.[0] ? Object.keys(geojson.features[0].properties || {}) : []
-    })
-
-    const filtrados = filtrarPorZona(geojson, centro, radioKm).map((f) => {
-      const categoria = obtenerCategoria(f)
-      const estilo = estiloCategoria(categoria)
-
-      console.log('[AMVA] feature filtrada y categorizada', {
+    const filtrados = filtrarPorZona(geojson, centro, radioKm).map((f) =>
+      enriquecer(f, {
         municipio: municipio.nombre,
-        featureId: f?.id,
-        properties: f?.properties,
-        categoria,
-        estilo
+        _epsgOriginal: epsg,
+        _servicioArcGIS: servicio
       })
-
-      return {
-        ...f,
-        properties: {
-          ...f.properties,
-          municipio: municipio.nombre,
-          categoria,
-          categoriaEtiqueta: estilo.etiqueta,
-          categoriaColor: estilo.color,
-          categoriaIcono: estilo.icono,
-          _epsgOriginal: epsg,   
-          _servicioArcGIS: servicio
-        }
-      }
-    })
+    )
 
     features.push(...filtrados)
-    if (filtrados.length > 0) {
-      municipiosConsultados.push(municipio.nombre)
-    }
+    if (filtrados.length > 0) municipiosConsultados.push(municipio.nombre)
   })
 
-  if (municipiosConError.length > 0) {
-    toast.error(`No se pudo consultar: ${municipiosConError.join(', ')}`)
-  }
+  return { features, municipiosConsultados, municipiosConError }
+}
 
-  if (features.length === 0) {
-    toast.error('No se encontraron equipamientos en esa zona')
+async function complementarConOSM(nombresMunicipios, centro, radioKm) {
+  try {
+    const geojson = await buscarEquipamientosOSM(centro, radioKm, nombresMunicipios)
+    const nombreUnico = nombresMunicipios.length === 1 ? nombresMunicipios[0] : ''
+    return geojson.features.map((f) => enriquecer(f, { municipio: nombreUnico }))
+  } catch (error) {
+    console.warn('[OSM] no se pudo complementar', nombresMunicipios, error)
+    return []
+  }
+}
+
+async function capaDesdeOSM(centro, radioKm) {
+  try {
+    const geojson = await buscarEquipamientosOSM(centro, radioKm)
+    const features = geojson.features.map((f) => enriquecer(f, { municipio: '' }))
+
+    if (features.length === 0) {
+      toast.error('No se encontraron equipamientos en esa zona')
+      return null
+    }
+
+    return {
+      id: crypto.randomUUID(),
+      nombre: `Equipamientos OSM (radio ${radioKm} km)`,
+      archivoOriginal: null,
+      geojson: { type: 'FeatureCollection', features },
+      crs: { epsg: 4326, fuente: 'OpenStreetMap Overpass' },
+      visible: true,
+      guardadaEnNube: false,
+      origenAPI: true,
+      municipiosConsultados: []
+    }
+  } catch (error) {
+    console.warn('[OSM] falló el respaldo de equipamientos', error)
+    toast.error('No se pudo consultar OpenStreetMap. Intenta de nuevo en unos segundos.')
+    return null
+  }
+}
+
+export async function capaDesdeZona(centro, radioKm, nombreCapaBuscada = 'Equipamientos Urbanos') {
+  const municipios = municipiosEnZona(centro, radioKm)
+
+  if (municipios.length === 0) {
+    toast.error('Esta zona está fuera del Valle de Aburrá. Por ahora GeoAburrá solo cubre los 10 municipios del Valle.')
     return null
   }
 
-  // El EPSG "de la capa" combinada se reporta como 4326 porque así es
-  // como f=geojson entrega los datos siempre. Los EPSG originales por
-  // municipio (que pueden diferir entre sí) quedan guardados por feature
-  // en _epsgOriginal, para trazabilidad y para mostrarlos en la UI si quieres.
+  let features = []
+  let municipiosConsultados = []
+  let municipiosPendientes = municipios 
+  let usoBaseDeDatos = false
+  let usoOSM = false
+
+  try {
+    const respuesta = await equipamientosEnZona(centro, radioKm)
+    const disponibles = new Set((respuesta.municipiosDisponibles || []).map(normalizar))
+
+    features = (respuesta.features || []).map((f) => enriquecer(f))
+    municipiosConsultados = [...new Set(features.map((f) => f.properties.municipio).filter(Boolean))]
+    municipiosPendientes = municipios.filter((m) => !disponibles.has(normalizar(m.nombre)))
+    usoBaseDeDatos = true
+  } catch (error) {
+    if (esSobrecarga(error)) {
+      console.warn('[Supabase] saturado: no se consulta AMVA ni OSM en vivo', error)
+      toast.error(MENSAJE_SATURADO, { id: 'servicio-saturado' })
+      return null
+    }
+    console.warn('[Supabase] no se pudo leer la base, se usa el AMVA en vivo', error)
+  }
+
+  if (municipiosPendientes.length > 0) {
+    const sinCapaAMVA = municipiosPendientes.filter((m) => MUNICIPIOS_SIN_CAPA_AMVA.has(normalizar(m.nombre)))
+    const paraAMVA = municipiosPendientes.filter((m) => !MUNICIPIOS_SIN_CAPA_AMVA.has(normalizar(m.nombre)))
+
+    let amva = { features: [], municipiosConsultados: [], municipiosConError: [] }
+    if (paraAMVA.length > 0) {
+      amva = await consultarAMVA(paraAMVA, centro, radioKm, nombreCapaBuscada)
+    }
+    features.push(...amva.features)
+    municipiosConsultados = [...new Set([...municipiosConsultados, ...amva.municipiosConsultados])]
+
+    const municipiosParaOSM = [...amva.municipiosConError, ...sinCapaAMVA.map((m) => m.nombre)]
+    if (municipiosParaOSM.length > 0) {
+      const extra = await complementarConOSM(municipiosParaOSM, centro, radioKm)
+
+      if (extra.length > 0) {
+        features.push(...extra)
+        usoOSM = true
+        toast.info(
+          `${extra.length} equipamientos de OpenStreetMap para ${municipiosParaOSM.join(', ')} (el AMVA no tiene datos ahí)`
+        )
+      } else {
+        toast.error(`No se pudo consultar: ${municipiosParaOSM.join(', ')}`)
+      }
+    }
+  }
+
+  if (features.length === 0) {
+    if (usoBaseDeDatos) {
+      toast.info('No hay equipamientos registrados en esta zona')
+      return null
+    }
+    toast.info('No se encontraron equipamientos en las fuentes oficiales: probando con OpenStreetMap')
+    return capaDesdeOSM(centro, radioKm)
+  }
+
+  const fuente = usoBaseDeDatos
+    ? 'Base de datos propia (copia de AMVA ArcGIS REST)'
+    : 'AMVA ArcGIS REST (f=geojson, reproyectado por el servidor)'
+
   const nuevaCapa = {
     id: crypto.randomUUID(),
     nombre: `${nombreCapaBuscada} (radio ${radioKm} km)`,
     archivoOriginal: null,
     geojson: { type: 'FeatureCollection', features },
-    crs: { epsg: 4326, fuente: 'AMVA ArcGIS REST (f=geojson, reproyectado por el servidor)' },
+    crs: { epsg: 4326, fuente: usoOSM ? `${fuente} + OpenStreetMap` : fuente },
     visible: true,
     guardadaEnNube: false,
     origenAPI: true,
     municipiosConsultados
   }
 
-  toast.success(`${features.length} equipamientos encontrados en ${municipiosConsultados.length} municipio(s)`)
   return nuevaCapa
 }

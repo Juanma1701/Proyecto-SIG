@@ -1,15 +1,3 @@
-// Exportación de capas.
-//
-// GeoJSON descargado sin más es un archivo mudo: el estándar RFC 7946 obliga a que
-// las coordenadas estén en WGS 84 y eliminó el miembro "crs", así que un
-// GeoJSON descargado en EPSG:3116 (metros) y luego vuelto a subir llega sin
-// ninguna pista de su sistema. Quien lo lea asume 4326 e interpreta metros
-// como grados, y la capa aparece en cualquier parte menos donde debe.
-//
-// Por eso al exportar a un sistema proyectado se escribe el miembro "crs" de
-// la versión 2008 del estándar: no es portGeoJSON conforme, pero es lo que leen
-// QGIS, ArcGIS y el propio cargador de esta app (detectarCRS.js).
-
 function nombreSeguro(nombre) {
   return String(nombre)
     .normalize('NFD')

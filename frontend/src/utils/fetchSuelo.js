@@ -1,8 +1,3 @@
-// utils/fetchSuelo.js
-// Reutiliza el descubrimiento dinámico de servicios que ya existe en
-// fetchArcGIS.js: en vez de asumir un nombre fijo de servicio/capa, busca
-// entre TODOS los servicios/capas del municipio cuál tiene que ver con
-// clasificación de suelo, riesgo, protección o patrimonio.
 import { buscarServiciosPorMunicipio, listarCapasDeServicio, fetchCapaArcGIS } from './fetchArcGIS'
 
 const AMVA_BASE = '/amva/server/rest/services'
@@ -17,13 +12,6 @@ function normalizar(texto) {
     .toUpperCase()
 }
 
-/**
- * Busca, dentro de TODOS los servicios descubiertos para un municipio,
- * TODAS las capas que tengan que ver con uso/clasificación de suelo,
- * riesgo, protección o patrimonio — no solo la primera que encuentre
- * (un mismo municipio puede publicar varias capas separadas: una de
- * clasificación urbano/rural, otra de riesgo, otra de patrimonio...).
- */
 export async function resolverCapasSueloPorMunicipio(nombreMunicipio) {
   const servicios = await buscarServiciosPorMunicipio(nombreMunicipio)
   const encontradas = []
@@ -33,7 +21,7 @@ export async function resolverCapasSueloPorMunicipio(nombreMunicipio) {
     try {
       capas = await listarCapasDeServicio(servicio.name)
     } catch {
-      continue // este servicio en particular falló, prueba el siguiente
+      continue 
     }
 
     capas
@@ -51,13 +39,8 @@ export async function resolverCapasSueloPorMunicipio(nombreMunicipio) {
   return encontradas
 }
 
-/**
- * Consulta la capa "Áreas Protegidas" del AMVA (cubre TODO el Valle de
- * Aburrá en un solo servicio, no hay que buscar por municipio), filtrada
- * espacialmente al radio de la zona para no traer todo el valle de una vez.
- */
 export async function fetchAreasProtegidasEnZona(centro, radioKm) {
-  const gradosPorKm = 1 / 111 // aproximación simple, suficiente para el envelope de consulta
+  const gradosPorKm = 1 / 111 
   const delta = radioKm * gradosPorKm
 
   const envelope = {

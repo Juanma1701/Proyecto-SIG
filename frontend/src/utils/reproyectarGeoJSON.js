@@ -13,12 +13,6 @@ const TIPOS_GEOMETRIA = new Set([
   'GeometryCollection',
 ])
 
-// Recorre el árbol de coordenadas validando dos cosas distintas según la
-// profundidad: una *posición* ([x, y] o [x, y, z]) necesita al menos dos
-// números, mientras que una *lista* (anillos de un Polygon, polígonos de un
-// MultiPolygon, vértices de una línea) solo necesita no estar vacía. Exigir dos
-// elementos en las listas rechazaba cualquier polígono sin huecos, que es el
-// caso más común.
 function validarCoordenadas(coordenadas) {
   if (!Array.isArray(coordenadas) || coordenadas.length === 0) {
     throw new Error('Una geometría contiene coordenadas inválidas')
@@ -189,8 +183,6 @@ export async function asegurarDefinicionEPSG(epsg) {
 
   const nombre = `EPSG:${codigo}`
 
-  // Los sistemas del catálogo ya quedaron registrados al cargar el módulo, así
-  // que nunca se sale a la red para los destinos que la interfaz ofrece.
   if (obtenerEPSG(codigo)) return
   if (proj4.defs(nombre)) return
 

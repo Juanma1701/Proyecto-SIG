@@ -1,6 +1,3 @@
-// Ajusta esta ruta al archivo donde ya tengas inicializado el cliente de
-// Supabase (createClient de '@supabase/supabase-js'). Si en tu proyecto se
-// llama distinto o está en otra carpeta, solo cambia esta línea.
 import { supabase } from '../lib/supabaseClient'
 
 /**

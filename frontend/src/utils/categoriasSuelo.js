@@ -14,13 +14,6 @@ export function estiloCategoriaSuelo(categoria) {
   return CATEGORIAS_SUELO[categoria] || CATEGORIAS_SUELO['SUELO DEFAULT']
 }
 
-/**
- * A diferencia de equipamientos, no sabemos de antemano el nombre exacto
- * del campo que trae la categoría en cada servicio del POT (varía por
- * municipio/servicio). Se busca por palabras clave en TODAS las
- * properties de texto, igual que se hace con obtenerCategoria() para
- * equipamientos del AMVA.
- */
 const PALABRAS_CLAVE_SUELO = [
   ['PROTECCION', ['proteccion', 'protección', 'area protegida', 'áreas protegidas', 'retiro', 'humedal', 'cerro tutelar']],
   ['RIESGO', ['riesgo', 'amenaza', 'inundacion', 'inundación', 'movimiento en masa', 'avenida torrencial']],

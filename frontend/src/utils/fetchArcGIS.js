@@ -1,8 +1,34 @@
 const AMVA_BASE = '/amva/server/rest/services'
-const TAMANO_PAGINA_CONSULTA = 1000
 
-let catalogoCache = null
+const cache = new Map()
 
+function conCache(clave, crear) {
+  if (cache.has(clave)) return cache.get(clave)
+  const promesa = crear().catch((error) => {
+    cache.delete(clave)
+    throw error
+  })
+  cache.set(clave, promesa)
+  return promesa
+}
+
+const ESTADOS_REINTENTABLES = [429, 502, 503, 504]
+const esperar = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+async function fetchConReintentos(url, intentos = 3) {
+  let ultimoError = new Error('No se pudo conectar con el servidor')
+  for (let i = 0; i < intentos; i++) {
+    try {
+      const res = await fetch(url)
+      if (res.ok || !ESTADOS_REINTENTABLES.includes(res.status)) return res
+      ultimoError = new Error(`El servidor respondió ${res.status}`)
+    } catch (error) {
+      ultimoError = error
+    }
+    if (i < intentos - 1) await esperar(500 * 2 ** i)
+  }
+  throw ultimoError
+}
 
 function normalizar(texto) {
   return texto
@@ -12,20 +38,16 @@ function normalizar(texto) {
     .replace(/\s+/g, '_')
 }
 
-async function obtenerCatalogoServicios() {
-  if (catalogoCache) return catalogoCache
+function obtenerCatalogoServicios() {
+  return conCache('catalogo', async () => {
+    const res = await fetchConReintentos(`${AMVA_BASE}?f=json`)
+    if (!res.ok) throw new Error(`No se pudo listar los servicios del AMVA: ${res.status}`)
 
-  const res = await fetch(`${AMVA_BASE}?f=json`)
-  if (!res.ok) throw new Error(`No se pudo listar los servicios del AMVA: ${res.status}`)
-
-  const data = await res.json()
-  // data.services trae [{ name: "Barbosa_POT_EB", type: "MapServer" }, ...]
-  catalogoCache = data.services || []
-  return catalogoCache
+    const data = await res.json()
+    return data.services || []
+  })
 }
 
-// Devuelve todos los servicios cuyo nombre "contiene" el municipio buscado.
-// Puede haber más de uno (ej. un municipio con varios servicios separados).
 export async function buscarServiciosPorMunicipio(nombreMunicipio) {
   const catalogo = await obtenerCatalogoServicios()
   const clave = normalizar(nombreMunicipio)
@@ -35,28 +57,19 @@ export async function buscarServiciosPorMunicipio(nombreMunicipio) {
   )
 }
 
-/**
- * Lista TODAS las capas reales (con datos) de un servicio.
- * Se descartan las "Group Layer": son carpetas contenedoras sin
- * geometrías propias, y llamarles /query siempre falla con
- * "Invalid or missing input parameters".
- */
-export async function listarCapasDeServicio(nombreServicio) {
-  const res = await fetch(`${AMVA_BASE}/${nombreServicio}/MapServer/layers?f=json`)
-  if (!res.ok) throw new Error(`No se pudo listar las capas de ${nombreServicio}: ${res.status}`)
+export function listarCapasDeServicio(nombreServicio) {
+  return conCache(`capas:${nombreServicio}`, async () => {
+    const res = await fetchConReintentos(`${AMVA_BASE}/${nombreServicio}/MapServer/layers?f=json`)
+    if (!res.ok) throw new Error(`No se pudo listar las capas de ${nombreServicio}: ${res.status}`)
 
-  const data = await res.json()
+    const data = await res.json()
 
-  return (data.layers || [])
-    .filter((l) => l.type !== 'Group Layer')
-    .map((l) => ({ id: l.id, nombre: l.name, tipo: l.type }))
+    return (data.layers || [])
+      .filter((l) => l.type !== 'Group Layer')
+      .map((l) => ({ id: l.id, nombre: l.name, tipo: l.type }))
+  })
 }
 
-/**
- * Dado un municipio, devuelve todos los servicios candidatos junto con
- * sus capas reales (id + nombre), para que la UI arme el select con
- * opciones que SÍ existen y SÍ tienen datos consultables.
- */
 export async function listarCapasDisponiblesPorMunicipio(nombreMunicipio) {
   const servicios = await buscarServiciosPorMunicipio(nombreMunicipio)
   if (servicios.length === 0) {
@@ -73,80 +86,76 @@ export async function listarCapasDisponiblesPorMunicipio(nombreMunicipio) {
   return resultados
 }
 
-// Lee el sistema de coordenadas real de una capa en vez de asumirlo fijo (ej. 9377).
-async function obtenerEpsgDeCapa(urlCapa) {
-  const res = await fetch(`${urlCapa}?f=json`)
-  if (!res.ok) return null
-  const data = await res.json()
-  return (
-    data?.sourceSpatialReference?.wkid ||
-    data?.extent?.spatialReference?.wkid ||
-    null
-  )
+function obtenerEpsgDeCapa(urlCapa) {
+  return conCache(`epsg:${urlCapa}`, async () => {
+    const res = await fetchConReintentos(`${urlCapa}?f=json`)
+    if (!res.ok) return null
+    const data = await res.json()
+    return (
+      data?.sourceSpatialReference?.wkid ||
+      data?.extent?.spatialReference?.wkid ||
+      null
+    )
+  })
 }
 
-/**
- * Construye la URL final de una capa ya elegida (por el usuario en el
- * select, o por código) y su EPSG. No valida "qué tan útil" es el
- * contenido — esa decisión ahora es del usuario, no del código.
- */
 export async function resolverCapaElegida(nombreServicio, idCapa) {
   const url = `${AMVA_BASE}/${nombreServicio}/MapServer/${idCapa}`
   const epsg = await obtenerEpsgDeCapa(url)
   return { url, servicio: nombreServicio, idCapa, epsg }
 }
 
-// Consulta todas las entidades de una capa ArcGIS REST y devuelve GeoJSON en WGS 84.
+const TAMANO_PAGINA = 1000
+const MAX_PAGINAS = 30
+
 export async function fetchCapaArcGIS(urlBaseCapa) {
-  const features = []
-  let resultOffset = 0
-  let primeraRespuesta = null
+  const geojson = await conCache(`geojson:${urlBaseCapa}`, async () => {
+    const urlSimple = `${urlBaseCapa}/query?where=1=1&outFields=*&returnGeometry=true&outSR=4326&f=geojson`
+    const todas = []
+    const vistos = new Set()
 
-  while (true) {
-    const parametros = new URLSearchParams({
-      where: '1=1',
-      outFields: '*',
-      returnGeometry: 'true',
-      outSR: '4326',
-      f: 'geojson',
-      resultOffset: String(resultOffset),
-      resultRecordCount: String(TAMANO_PAGINA_CONSULTA),
-    })
-    const url = `${urlBaseCapa}/query?${parametros}`
+    for (let pagina = 0; pagina < MAX_PAGINAS; pagina++) {
+      const url = `${urlSimple}&resultOffset=${todas.length}&resultRecordCount=${TAMANO_PAGINA}`
+      const res = await fetchConReintentos(url)
+      if (!res.ok) throw new Error(`Error al consultar el servicio: ${res.status}`)
 
-    const res = await fetch(url)
-    if (!res.ok) throw new Error(`Error al consultar el servicio: ${res.status}`)
+      const data = await res.json()
 
-    const geojson = await res.json()
+      if (data.error) {
+        if (pagina === 0) {
+          const resSimple = await fetchConReintentos(urlSimple)
+          if (!resSimple.ok) throw new Error(`Error al consultar el servicio: ${resSimple.status}`)
+          const dataSimple = await resSimple.json()
+          if (dataSimple.error) {
+            console.error('[AMVA] error de ArcGIS', { url: urlSimple, error: dataSimple.error })
+            throw new Error(`${dataSimple.error.message || 'El servicio devolvió un error'} (capa: ${urlBaseCapa})`)
+          }
+          return dataSimple
+        }
+        break
+      }
 
-    if (geojson.error) {
-      console.error('[AMVA] error de ArcGIS', { url, error: geojson.error })
-      throw new Error(`${geojson.error.message || 'El servicio devolvió un error'} (capa: ${urlBaseCapa})`)
+      const lote = data.features || []
+      let nuevos = 0
+      for (const f of lote) {
+        const clave = f.id ?? JSON.stringify(f.properties)
+        if (!vistos.has(clave)) {
+          vistos.add(clave)
+          todas.push(f)
+          nuevos++
+        }
+      }
+
+      const hayMas = data.exceededTransferLimit || data.properties?.exceededTransferLimit
+      if (nuevos === 0 || (!hayMas && lote.length < TAMANO_PAGINA)) break
     }
 
-    if (!Array.isArray(geojson.features)) {
-      throw new Error(`El servicio no devolvió entidades GeoJSON válidas (capa: ${urlBaseCapa})`)
-    }
+    return { type: 'FeatureCollection', features: todas }
+  })
 
-    if (!primeraRespuesta) primeraRespuesta = geojson
-    features.push(...geojson.features)
-
-    if (!geojson.exceededTransferLimit) break
-    if (geojson.features.length === 0) {
-      throw new Error(`La consulta quedó truncada y no pudo recuperar más entidades (capa: ${urlBaseCapa})`)
-    }
-
-    resultOffset += geojson.features.length
-  }
-
-  return { ...primeraRespuesta, features }
+  return structuredClone(geojson)
 }
 
-/**
- * Versión simple para "Mapear una zona" (capaDesdeZona.js): busca la
- * primera capa cuyo nombre se parezca al buscado, sin heurísticas de
- * contenido ni descartes por porcentaje de categorías.
- */
 export async function resolverCapaPorMunicipio(nombreMunicipio, nombreCapaBuscada = 'Equipamientos Urbanos') {
   const resultados = await listarCapasDisponiblesPorMunicipio(nombreMunicipio)
   const clave = normalizar(nombreCapaBuscada)
