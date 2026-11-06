@@ -1,4 +1,5 @@
 # Proyecto-SIG
+Desarrollada por Juan Manuel Castaño Quiroz y Juan Pablo Uribe
 
 Aplicación web para cargar, visualizar, reproyectar y almacenar capas geoespaciales (GeoJSON, Shapefile, KML), con soporte para dos motores de renderizado intercambiables: Leaflet (estándar) y MapLibre GL (alto rendimiento, WebGL).
 
