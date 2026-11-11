@@ -1,0 +1,10 @@
+.zona-selector__aviso-usos {
+  margin: -4px 0 0;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(234, 179, 8, 0.5);
+  background: rgba(234, 179, 8, 0.12);
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--color-texto);
+}

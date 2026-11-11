@@ -1,0 +1,133 @@
+.filtro-suelo__lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filtro-suelo__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 9px;
+  border-radius: 12px;
+  background: var(--color-tarjeta);
+  border: 1px solid var(--color-borde);
+  transition: border-color 0.15s ease;
+}
+
+.filtro-suelo__item:hover {
+  border-color: var(--color-borde-hover);
+}
+
+.filtro-suelo__principal {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.filtro-suelo__principal input {
+  accent-color: var(--color-exito);
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.filtro-suelo__muestra {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.08);
+}
+
+.filtro-suelo__nombre {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  line-height: 1.2;
+  color: var(--color-texto);
+  min-width: 0;
+}
+
+.filtro-suelo__porcentaje {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-texto);
+  flex-shrink: 0;
+  transition: opacity 0.15s ease;
+}
+
+.filtro-suelo__item.is-disabled .filtro-suelo__principal,
+.filtro-suelo__item.is-disabled .filtro-suelo__porcentaje {
+  opacity: 0.45;
+}
+
+.filtro-suelo__info {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-texto-secundario);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.filtro-suelo__info:hover,
+.filtro-suelo__info[aria-expanded='true'] {
+  color: var(--color-texto);
+  background: rgba(148, 163, 184, 0.2);
+}
+
+.filtro-suelo__detalle {
+  margin: 4px 2px 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px dashed var(--color-borde);
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--color-texto);
+}
+
+.filtro-suelo__detalle h4 {
+  margin: 0 0 6px;
+  font-size: 13px;
+}
+
+.filtro-suelo__detalle h5 {
+  margin: 8px 0 2px;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-texto-secundario);
+}
+
+.filtro-suelo__detalle p {
+  margin: 0;
+}
+
+.filtro-suelo__referencia {
+  margin-top: 2px !important;
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.filtro-suelo__nota,
+.filtro-suelo__vacio {
+  margin: 10px 0 0;
+  font-size: 11px;
+  line-height: 1.4;
+  opacity: 0.75;
+}

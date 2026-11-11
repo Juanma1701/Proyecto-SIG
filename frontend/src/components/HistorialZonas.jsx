@@ -59,27 +59,32 @@ function PanelComparacion({ filaA, filaB }) {
 
 export default function HistorialZonas({ setCapas }) {
   const { user } = useAuth()
-  const [zonas, setZonas] = useState([])
-  const [cargando, setCargando] = useState(true)
+  const userId = user?.id ?? null
+
+  // El resultado recuerda de qué usuario es (`userId`). Así "cargando" se deduce al mostrar
+  // y el efecto solo guarda la lista cuando llega, sin escribir estado de forma síncrona.
+  const [resultado, setResultado] = useState({ userId: null, zonas: [] })
   const [seleccionadas, setSeleccionadas] = useState([])
 
-  async function recargar() {
-    if (!user) return
-    setCargando(true)
-    try {
-      const data = await listarZonas(user.id)
-      setZonas(data)
-    } catch (error) {
-      toast.error('No se pudieron cargar tus zonas: ' + error.message)
-    } finally {
-      setCargando(false)
-    }
-  }
-
   useEffect(() => {
-    recargar()
-    
-  }, [user])
+    if (!userId) return
+
+    let cancelado = false
+    listarZonas(userId)
+      .then((data) => {
+        if (!cancelado) setResultado({ userId, zonas: data })
+      })
+      .catch((error) => {
+        if (cancelado) return
+        setResultado({ userId, zonas: [] })
+        toast.error('No se pudieron cargar tus zonas: ' + error.message)
+      })
+
+    return () => { cancelado = true }
+  }, [userId])
+
+  const cargando = userId !== null && resultado.userId !== userId
+  const zonas = resultado.userId === userId ? resultado.zonas : []
 
   function manejarCargar(fila) {
     const nuevasCapas = capasDesdeZonaGuardada(fila)
@@ -90,7 +95,7 @@ export default function HistorialZonas({ setCapas }) {
   async function manejarEliminar(id) {
     try {
       await eliminarZonaGuardada(id)
-      setZonas(prev => prev.filter(z => z.id !== id))
+      setResultado(prev => ({ ...prev, zonas: prev.zonas.filter(z => z.id !== id) }))
       setSeleccionadas(prev => prev.filter(sid => sid !== id))
       toast.success('Zona eliminada')
     } catch (error) {

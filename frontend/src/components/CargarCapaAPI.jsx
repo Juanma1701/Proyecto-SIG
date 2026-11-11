@@ -17,19 +17,21 @@ export default function CargarCapaAPI({ setCapas }) {
   const [cargandoLista, setCargandoLista] = useState(false)
   const [cargandoDatos, setCargandoDatos] = useState(false)
 
+  // Al cambiar de municipio se vacían las listas aquí (en el manejador del cambio),
+  // y no dentro del efecto, para evitar renders en cascada.
+  function elegirMunicipio(nuevo) {
+    setMunicipio(nuevo)
+    setCapasDisponibles([])
+    setCapaSeleccionada('')
+  }
+
   useEffect(() => {
-    if (!municipio) {
-      setCapasDisponibles([])
-      setCapaSeleccionada('')
-      return
-    }
+    if (!municipio) return
 
     let cancelado = false
 
     async function cargarListaCapas() {
       setCargandoLista(true)
-      setCapasDisponibles([])
-      setCapaSeleccionada('')
       try {
         const resultados = await listarCapasDisponiblesPorMunicipio(municipio)
         const lista = resultados.flatMap(({ servicio, capas }) =>
@@ -126,7 +128,7 @@ export default function CargarCapaAPI({ setCapas }) {
         <div className="capa-api__select-wrapper">
           <select
             value={municipio}
-            onChange={(e) => setMunicipio(e.target.value)}
+            onChange={(e) => elegirMunicipio(e.target.value)}
           >
             <option value="" disabled>Elige un municipio del Valle de Aburrá</option>
             {MUNICIPIOS_AMVA.map((m) => (

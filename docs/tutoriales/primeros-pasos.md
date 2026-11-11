@@ -1,48 +1,70 @@
 # Primeros pasos
 
-Esta guía te lleva de cero a tener tu primera capa geográfica visualizada, reproyectada y guardada.
+Esta guía te lleva de cero a tu primer análisis de una zona del Valle de Aburrá. También está dentro del visor, en el botón **Guía de uso**.
 
-## 1. Abrir el visor
+## 1. Entrar al visor
 
-Al abrir la aplicación verás un mapa centrado en Medellín y un panel lateral con las opciones de carga.
+La primera vez que abres GeoAburrá aparece una portada con tres botones: **¿Qué puede hacer?**, **Ir al visor** y **Guía paso a paso**. Pulsa "Ir al visor". Las siguientes veces entras directo al visor; para volver a la portada usa el botón **Portada** del panel izquierdo.
 
-## 2. Elegir el modo de visualización
+## 2. Elegir el centro de tu zona
 
-En "Modo de visualización" puedes alternar entre:
-- **Estándar** — Leaflet, ideal para uso normal
-- **Alto rendimiento** — MapLibre GL (WebGL), ideal para datasets grandes
+Tienes cuatro formas:
+- **Hacer clic en el mapa.** Arriba aparece una tarjeta con el punto elegido.
+- **Usar mi ubicación** (panel de trabajo, a la izquierda). El navegador te pide permiso.
+- **Escribir las coordenadas** de latitud y longitud en "Mapear una zona".
+- **Ir a un municipio**: acerca el mapa a uno de los 10 municipios del Valle.
 
-Puedes cambiar entre ambos en cualquier momento sin perder las capas cargadas.
+La zona debe quedar dentro del Valle de Aburrá.
 
-## 3. Cargar tu primer archivo
+## 3. Elegir el radio y crear la zona
 
-Haz clic en "Elegir archivo" y selecciona:
-- Un `.geojson` o `.json`, o
-- Un `.zip` con tu shapefile completo (`.shp`, `.shx`, `.dbf`, `.prj`), o
-- Un `.kml`
+En la tarjeta elige un radio (500 m, 1, 2, 3 o 5 km) y pulsa **Analizar aquí**. También puedes usar el formulario del panel de trabajo y **Crear zona**. El mapa se acerca a la zona y un mensaje te dice cuántos elementos se encontraron.
 
-La capa aparecerá dibujada en el mapa automáticamente, y una tarjeta con su nombre aparecerá en "Capas cargadas".
+Los equipamientos y los lugares siempre se incluyen. La clasificación del suelo viene marcada. En "Mapear una zona" puedes agregar:
+- **Usos del suelo oficiales** (solo suelo urbano de Medellín, radio de hasta 3 km).
+- **Cobertura de un servicio**: qué parte de la zona queda cerca de salud, educación, recreación, cultura o transporte (distancia en línea recta).
+- **Teselado**: el mapa dividido en hexágonos, para ver dónde se concentran los equipamientos.
 
-## 4. Ver el sistema de referencia detectado
+**Limpiar zonas y resultados** quita la zona y todo lo que se consultó con ella, y puedes deshacerlo durante unos segundos.
 
-Cada capa muestra su EPSG detectado y de dónde se obtuvo esa información (por ejemplo, del archivo `.prj`, o del estándar GeoJSON).
+## 4. Explorar el mapa
 
-## 5. Reproyectar una capa
+A la derecha hay una columna de botones: Filtros, Suelo, Usos, Capas, Estadísticas, Mis zonas y Cerca. Pasa el cursor sobre cada uno para ver qué hace. Solo se abre un panel a la vez: ciérralo con **Cerrar** o con la tecla Esc.
 
-En la tarjeta de la capa, escribe el código EPSG destino (por ejemplo `3116` para MAGNA-SIRGAS Bogotá) y haz clic en "Reproyectar". El mapa se actualiza al instante.
+Abajo a la derecha, la **leyenda** te deja mostrar u ocultar categorías de equipamientos y lugares. Abajo a la izquierda hay una escala.
 
-## 6. Mostrar u ocultar capas
+## 5. Consultar un punto
 
-Cada capa tiene un checkbox "Mostrar en el mapa" — desmárcalo para ocultarla sin eliminarla.
+Con el suelo o los usos visibles, haz clic en el mapa: se abre una ventana con la clasificación del suelo y el uso oficial de ese punto. Con el teselado, haz clic en una celda que tenga equipamientos para ver su detalle.
 
-## 7. Guardar en la nube
+## 6. Leer las estadísticas
 
-Haz clic en "Guardar en la nube" para subir el archivo original a Supabase Storage y registrar la capa (ya reproyectada a EPSG:4326) en la base de datos.
+En **Estadísticas** hay cuatro pestañas: Resumen, Suelo, Usos y Servicios. Cada una aparece solo si marcaste esa capa al crear la zona. Desde ahí puedes:
+- Exportar el mapa como imagen (PNG).
+- Exportar el informe en PDF, que incluye una "lectura rápida", las cifras de la zona, las fuentes y las advertencias.
+- Guardar la zona, si iniciaste sesión.
 
-## 8. Capturar coordenadas
+## 7. Compartir una zona
 
-Haz clic en cualquier punto del mapa para ver su latitud/longitud en el panel lateral.
+Con una zona creada, **Copiar enlace de esta zona** (panel izquierdo) copia una dirección. Quien la abra verá la misma zona. El enlace guarda el centro y el radio, no las capas opcionales (usos, cobertura y teselado).
 
-## 9. Probar el rendimiento
+## 8. Cargar tus propios datos
 
-Usa el botón "⚡ Generar capa de prueba (5,000 puntos)" para comparar visualmente la fluidez entre el modo Estándar y Alto rendimiento.
+En el panel izquierdo, cambia el "Modo de visualización" a **Cargar GeoJSON** y arrastra o elige un archivo:
+- un `.geojson` o `.json`,
+- un `.zip` con el shapefile completo (`.shp`, `.shx`, `.dbf` y `.prj`),
+- o un `.kml`.
+
+La aplicación detecta el sistema de referencia del archivo (EPSG) y lo reproyecta a WGS84 para dibujarlo. Si no puede determinarlo, te lo dice. La capa aparece en el panel **Capas**.
+
+## 9. Datos abiertos del AMVA
+
+En el modo de zonas, el bloque **Datos abiertos del AMVA** te deja elegir un municipio y una de sus capas para cargarla al mapa.
+
+## 10. Iniciar sesión
+
+El ícono de perfil (arriba, en el panel izquierdo) abre el panel de cuenta. Con sesión puedes guardar zonas y ver "Mis zonas". Guardar datos en la base exige tener sesión iniciada.
+
+## Antes de interpretar los resultados
+
+El suelo y los usos muestran lo que el POT **permite o planea**, no lo que existe hoy en cada predio. Los usos solo cubren el suelo urbano de Medellín y corresponden al POT de 2014. Más detalle en la pestaña "Datos y licencias" de la guía y en `docs/explicacion/analisis-suelo.md`.

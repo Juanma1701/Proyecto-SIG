@@ -1,0 +1,44 @@
+.estadisticas-usos {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-borde);
+}
+
+.estadisticas-usos__resumen-simple {
+  margin: 0 0 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  background: rgba(59, 130, 246, 0.1);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.estadisticas-usos__oficial {
+  margin-top: 1px;
+  font-size: 10.5px;
+  font-style: italic;
+  color: var(--color-texto-secundario);
+}
+
+.estadisticas-usos__sin-dato {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  font-size: 11.5px;
+}
+
+.estadisticas-usos__tecnico {
+  margin-top: 10px;
+  padding: 6px 8px;
+  border: 1px dashed var(--color-borde);
+  border-radius: 8px;
+}
+
+.estadisticas-usos__tecnico summary {
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-texto-secundario);
+}

@@ -1,0 +1,12 @@
+/* Escala gráfica de Leaflet (abajo a la izquierda del mapa) */
+.leaflet-control-scale-line {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* En el celular, el botón "Menú" ocupa esa esquina: la escala sube para no taparse con él */
+@media (max-width: 768px) {
+  .leaflet-bottom.leaflet-left .leaflet-control-scale {
+    margin-bottom: 84px;
+  }
+}

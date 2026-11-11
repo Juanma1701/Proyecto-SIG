@@ -5,8 +5,8 @@
   width: 100%;
   overflow: hidden;
   background: var(--color-fondo);
-  
 }
+
 .btn-profile{
   border-radius: 50%;
   width: 40px;
@@ -15,8 +15,11 @@
   cursor: pointer;
   border-style: none;
 }
+
+/* Elementos que solo existen en el celular (se muestran en el bloque @media del final) */
 .btn-toggle-barra,
-.dashboard__overlay {
+.dashboard__overlay,
+.sidebar-header__cerrar-movil {
   display: none;
 }
 
@@ -59,6 +62,10 @@
   cursor: pointer;
   transition: background 0.18s ease, color 0.18s ease;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
 .toggle-renderer button:hover {
@@ -86,149 +93,11 @@
   background: var(--color-acento-hover);
 }
 
-.dashboard__mapa-contenedor {
-  position: relative;
-  flex: 1 1 0%;
-  min-width: 0;
-  height: 100vh;
-}
-
-.controles-mapa {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  z-index: 1300;
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  gap: 8px;
-}
-
-.controles-mapa__grupo {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 8px;
-}
-
-.btn-toggle-layer,
-.btn-toggle-filtros,
-.btn-toggle-estadisticas,
-.btn-toggle-historial {
-  flex-shrink: 0;
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  background: var(--color-tarjeta);
-  backdrop-filter: blur(6px);
-  border: 1px solid var(--color-borde);
-  color: var(--color-texto);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.12);
-  transition: background 0.2s, border-color 0.2s, color 0.2s;
-}
-
-.btn-toggle-filtros:hover,
-.btn-toggle-layer:hover,
-.btn-toggle-estadisticas:hover,
-.btn-toggle-historial:hover {
-  background: var(--color-acento);
-  color: #ffffff;
-  border-color: var(--color-acento);
-}
-
-.btn-toggle-filtros.activo,
-.btn-toggle-layer.activo,
-.btn-toggle-estadisticas.activo,
-.btn-toggle-historial.activo {
-  background: var(--color-exito);
-  color: #ffffff;
-  border-color: var(--color-exito);
-}
-
-@media (max-width: 768px) {
-  .dashboard {
-    height: 100dvh;
-  }
-
-  .sidebar {
-    position: fixed;
-    inset: 0 auto 0 0;
-    z-index: 1300;
-    width: min(340px, calc(100vw - 32px));
-    height: 100dvh;
-    padding: 20px 16px;
-    transform: translateX(-105%);
-    transition: transform 0.25s ease;
-    box-shadow: 12px 0 30px rgba(15, 23, 42, 0.15);
-    background: var(--color-fondo);
-  }
-
-  .dashboard--barra-abierta .sidebar {
-    transform: translateX(0);
-  }
-
-  .dashboard__overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 1200;
-    display: block;
-    background: rgba(15, 23, 42, 0.35);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.25s ease;
-  }
-
-  .dashboard--barra-abierta .dashboard__overlay {
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  .btn-toggle-barra {
-    position: absolute;
-    top: 12px;
-    left: 12px;
-    z-index: 1100;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    border: 1px solid var(--color-borde);
-    border-radius: 10px;
-    background: var(--color-tarjeta);
-    color: var(--color-texto);
-    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.12);
-    cursor: pointer;
-  }
-
-  .dashboard--barra-abierta .btn-toggle-barra {
-    position: fixed;
-    z-index: 1400;
-    left: min(292px, calc(100vw - 68px));
-  }
-
-  .dashboard__mapa-contenedor {
-    flex: 1 1 100%;
-    width: 100%;
-    height: 100dvh;
-    min-height: 0;
-  }
-
-  .controles-mapa {
-    top: 12px;
-    right: 8px;
-    gap: 6px;
-    flex-direction: column-reverse;
-    align-items: flex-end;
-  }
-}
+/* ---------- Panel izquierdo ---------- */
 .sidebar {
-  width: 370px; 
+  width: 370px;
 }
+
 .sidebar-header {
   display: flex;
   align-items: center;
@@ -273,9 +142,244 @@
   letter-spacing: 0.05em;
 }
 
-.toggle-renderer button {
+/* ---------- Mapa ---------- */
+.dashboard__mapa-contenedor {
+  position: relative;
+  flex: 1 1 0%;
+  min-width: 0;
+  height: 100vh;
+}
+
+/* ---------- Barra de herramientas (derecha) ---------- */
+.herramientas {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 1300;
   display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.btn-herramienta {
+  flex-shrink: 0;
+  width: 68px;
+  min-height: 54px;
+  padding: 6px 2px;
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 3px;
+  border-radius: 12px;
+  background: var(--color-tarjeta);
+  border: 1px solid var(--color-borde);
+  color: var(--color-texto);
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.1;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.12);
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.btn-herramienta:hover {
+  background: var(--color-acento);
+  color: #ffffff;
+  border-color: var(--color-acento);
+}
+
+.btn-herramienta.activo {
+  background: var(--color-exito);
+  color: #ffffff;
+  border-color: var(--color-exito);
+}
+
+.btn-herramienta:focus-visible,
+.panel-flotante__cerrar:focus-visible,
+.btn-toggle-barra:focus-visible {
+  outline: 3px solid var(--color-acento);
+  outline-offset: 2px;
+}
+
+/* ---------- Panel abierto (uno solo a la vez) ---------- */
+.panel-flotante {
+  position: absolute;
+  top: 16px;
+  right: 92px;
+  z-index: 1300;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  max-width: calc(100% - 108px);
+}
+
+.panel-flotante__cerrar {
+  display: inline-flex;
+  align-items: center;
   gap: 6px;
+  height: 36px;
+  padding: 0 14px 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--color-borde);
+  background: var(--color-tarjeta);
+  color: var(--color-texto);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.12);
+}
+
+.panel-flotante__cerrar:hover {
+  border-color: var(--color-borde-hover);
+  background: var(--color-fondo);
+}
+
+.panel-flotante__cuerpo {
+  min-height: 0;
+}
+
+/* Que ningún panel se salga de la pantalla (el cuerpo de cada uno ya hace su propio scroll) */
+.panel-flotante .panel-flotante__cuerpo > * {
+  max-height: calc(100dvh - 110px);
+}
+
+.panel-flotante__vacio {
+  width: 280px;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px dashed var(--color-borde);
+  background: var(--color-fondo);
+  color: var(--color-texto-secundario);
+  font-size: 13px;
+  line-height: 1.45;
+  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.14);
+}
+
+/* ---------- Celular y pantallas angostas ---------- */
+@media (max-width: 768px) {
+  .dashboard {
+    height: 100dvh;
+  }
+
+  .sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 1300;
+    width: min(340px, calc(100vw - 32px));
+    height: 100dvh;
+    padding: 20px 16px;
+    transform: translateX(-105%);
+    transition: transform 0.25s ease;
+    box-shadow: 12px 0 30px rgba(15, 23, 42, 0.15);
+    background: var(--color-fondo);
+  }
+
+  .dashboard--barra-abierta .sidebar {
+    transform: translateX(0);
+  }
+
+  .dashboard__overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    display: block;
+    background: rgba(15, 23, 42, 0.35);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+
+  .dashboard--barra-abierta .dashboard__overlay {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .sidebar-header__cerrar-movil {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    margin-left: auto;
+    border: 1px solid var(--color-borde);
+    border-radius: 50%;
+    background: var(--color-tarjeta);
+    color: var(--color-texto);
+    cursor: pointer;
+  }
+
+  /* Botón para abrir el panel izquierdo, abajo a la izquierda (al alcance del pulgar) */
+  .btn-toggle-barra {
+    position: absolute;
+    left: 12px;
+    bottom: 28px;
+    z-index: 1100;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 44px;
+    padding: 0 16px;
+    border: 1px solid var(--color-borde);
+    border-radius: 999px;
+    background: var(--color-tarjeta);
+    color: var(--color-texto);
+    font-size: 14px;
+    font-weight: 700;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.18);
+    cursor: pointer;
+  }
+
+  .dashboard--barra-abierta .btn-toggle-barra,
+  .dashboard--panel-abierto .btn-toggle-barra {
+    display: none;
+  }
+
+  .dashboard__mapa-contenedor {
+    flex: 1 1 100%;
+    width: 100%;
+    height: 100dvh;
+    min-height: 0;
+  }
+
+  .herramientas {
+    top: 12px;
+    right: 8px;
+    gap: 6px;
+  }
+
+  .btn-herramienta {
+    width: 62px;
+    min-height: 48px;
+  }
+
+  /* Con un panel abierto, la barra se esconde y el panel sube desde abajo, a lo ancho */
+  .dashboard--panel-abierto .herramientas {
+    display: none;
+  }
+
+  .panel-flotante {
+    top: auto;
+    right: 8px;
+    bottom: 8px;
+    left: 8px;
+    max-width: none;
+    align-items: stretch;
+  }
+
+  .panel-flotante__cerrar {
+    align-self: flex-end;
+  }
+
+  .panel-flotante .panel-flotante__cuerpo > * {
+    width: 100%;
+    max-width: 100%;
+    max-height: min(62dvh, 520px);
+  }
+
+  .panel-flotante__vacio {
+    width: 100%;
+  }
 }

@@ -1,0 +1,57 @@
+.btn-herramienta {
+  position: relative;
+}
+
+.btn-herramienta__tip {
+  position: absolute;
+  top: 50%;
+  right: calc(100% + 12px);
+  transform: translateY(-50%);
+  z-index: 1;
+  width: max-content;
+  max-width: 230px;
+  padding: 8px 11px;
+  border-radius: 10px;
+  background: #0f172a;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.35;
+  text-align: left;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.3);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.12s ease 0.2s, visibility 0s linear 0.2s;
+}
+
+.btn-herramienta__tip strong {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 12.5px;
+  font-weight: 800;
+}
+
+.btn-herramienta__tip::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  transform: translateY(-50%);
+  border: 6px solid transparent;
+  border-left-color: #0f172a;
+}
+
+@media (hover: hover) {
+  .btn-herramienta:hover:not(.activo) .btn-herramienta__tip,
+  .btn-herramienta:focus-visible:not(.activo) .btn-herramienta__tip {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-herramienta__tip {
+    transition: none;
+  }
+}

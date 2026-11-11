@@ -1,0 +1,264 @@
+/* Portada de GeoAburrá. Los colores son propios (no dependen de las variables globales)
+   porque esta pantalla tiene fondo azul oscuro y texto blanco. */
+.inicio {
+  position: fixed;
+  inset: 0;
+  /* Por encima del mapa y de sus controles, porque el visor queda cargado debajo */
+  z-index: 10000;
+  overflow-y: auto;
+  display: flex;
+  padding: 24px 16px;
+  background: linear-gradient(160deg, #0b2545 0%, #13315c 55%, #1d4e89 100%);
+  color: #ffffff;
+}
+
+/* margin: auto centra el panel y, si el contenido es más alto que la pantalla, deja hacer scroll */
+.inicio__panel {
+  width: 100%;
+  max-width: 880px;
+  margin: auto;
+  padding: 8px 0 16px;
+}
+
+.inicio__titulo {
+  margin: 0;
+  font-size: clamp(2.2rem, 7vw, 3.4rem);
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  text-align: center;
+}
+
+.inicio__lema {
+  margin: 6px 0 0;
+  font-size: clamp(1rem, 2.6vw, 1.2rem);
+  text-align: center;
+  color: #cfe0f5;
+}
+
+.inicio__descripcion {
+  max-width: 620px;
+  margin: 18px auto 28px;
+  font-size: 1rem;
+  line-height: 1.55;
+  text-align: center;
+}
+
+.inicio__titulo:focus,
+.inicio__subtitulo:focus {
+  outline: none;
+}
+
+.inicio__subtitulo {
+  margin: 14px 0 18px;
+  font-size: clamp(1.4rem, 4vw, 1.9rem);
+  font-weight: 800;
+}
+
+/* ---------- Botones ---------- */
+.inicio__botones {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 1fr;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.inicio__acciones {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+.inicio__boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 14px;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.inicio__boton:hover {
+  transform: translateY(-2px);
+}
+
+.inicio__boton--funciones {
+  background: #0f766e;
+  color: #ffffff;
+}
+
+.inicio__boton--funciones:hover {
+  background: #115e59;
+}
+
+.inicio__boton--guia {
+  background: #7c3aed;
+  color: #ffffff;
+}
+
+.inicio__boton--guia:hover {
+  background: #6d28d9;
+}
+
+/* El botón principal: más grande y de color cálido para que se note */
+.inicio__boton--visor {
+  padding: 20px 24px;
+  border-color: transparent;
+  background: #f59e0b;
+  color: #0b2545;
+  font-size: 1.1rem;
+}
+
+.inicio__boton--visor:hover {
+  background: #fbbf24;
+}
+
+.inicio__boton:focus-visible,
+.inicio__volver:focus-visible {
+  outline: 3px solid #ffffff;
+  outline-offset: 3px;
+}
+
+.inicio__volver {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 10px;
+  background: transparent;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.inicio__volver:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+/* ---------- Tarjetas de "qué puede hacer" ---------- */
+.inicio__rejilla {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 14px;
+}
+
+.inicio__tarjeta {
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.inicio__tarjeta-icono {
+  display: inline-grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  margin-bottom: 8px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.inicio__tarjeta h3 {
+  margin: 0 0 6px;
+  font-size: 1.02rem;
+}
+
+.inicio__tarjeta p {
+  margin: 0;
+  font-size: 0.93rem;
+  line-height: 1.5;
+  color: #e6effa;
+}
+
+.inicio__nota {
+  margin: 18px 0 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 12px;
+  background: rgba(11, 37, 69, 0.55);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+/* ---------- Guía paso a paso ---------- */
+.inicio__pasos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.inicio__paso {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.inicio__paso-numero {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #0b2545;
+  font-weight: 800;
+}
+
+.inicio__paso h3 {
+  margin: 0 0 4px;
+  font-size: 1.02rem;
+}
+
+.inicio__paso p {
+  margin: 0;
+  font-size: 0.93rem;
+  line-height: 1.5;
+  color: #e6effa;
+}
+
+.inicio__pie {
+  margin: 26px 0 0;
+  font-size: 0.85rem;
+  text-align: center;
+  color: #b9cde8;
+}
+
+/* ---------- Móvil: botones en columna, con "Ir al visor" arriba ---------- */
+@media (max-width: 680px) {
+  .inicio__botones {
+    grid-template-columns: 1fr;
+  }
+
+  .inicio__boton--visor {
+    order: -1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inicio__boton {
+    transition: none;
+  }
+
+  .inicio__boton:hover {
+    transform: none;
+  }
+}
