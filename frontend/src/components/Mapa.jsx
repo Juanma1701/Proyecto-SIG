@@ -5,6 +5,8 @@ import 'leaflet.markercluster/dist/MarkerCluster.css'
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 import 'leaflet.markercluster'
 import '../styles/Mapa.css'
+import '../styles/PopupSuelo.css'
+import '../styles/PopupCapas.css'
 import {
   obtenerCategoria,
   estiloCategoria,
@@ -16,6 +18,14 @@ import {
 import { CATEGORIAS_LUGARES, estiloCategoriaLugar } from '../utils/categoriasLugares'
 import { buscarWebsitePorNombre } from '../utils/fetchOverpass'
 import { geometriaEquipamiento } from '../utils/cercania'
+import { consultarSueloEnPunto, consultarSueloEnCelda } from '../utils/consultasSuelo'
+import { consultarUsoEnPunto } from '../utils/consultasUsos'
+import {
+  htmlCargandoSuelo,
+  htmlErrorSuelo,
+  htmlCeldaTeselado
+} from '../utils/popupsSuelo'
+import { htmlPopupCapas } from '../utils/popupCapas'
 
 
 import iconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png'
@@ -29,11 +39,54 @@ L.Icon.Default.mergeOptions({
   shadowUrl,
 })
 
+// Valor por defecto estable (si fuera un [] nuevo en cada render, los efectos se repetirían)
+const SIN_OCULTAS = []
+
 // Une el mapa de estilos de equipamientos AMVA con el de lugares (Overpass),
 // para poder pintar cualquier feature sin importar de qué capa venga.
 function estiloUnificado(categoria) {
   if (CATEGORIAS_LUGARES[categoria]) return estiloCategoriaLugar(categoria)
   return estiloCategoria(categoria)
+}
+
+// ¿Dos capas de análisis pertenecen a la misma zona?
+function mismaZona(a, b) {
+  if (a.zonaId && b.zonaId) return a.zonaId === b.zonaId
+  return Boolean(
+    a.zonaCentro &&
+    b.zonaCentro &&
+    Math.abs(a.zonaCentro.lat - b.zonaCentro.lat) < 1e-6 &&
+    Math.abs(a.zonaCentro.lng - b.zonaCentro.lng) < 1e-6 &&
+    a.zonaRadioKm === b.zonaRadioKm
+  )
+}
+
+// Convierte una consulta en { ok, datos } o { ok:false, mensaje } para que un fallo no tumbe al resto
+function resultadoConsulta(promesa) {
+  return promesa
+    .then((datos) => ({ ok: true, datos }))
+    .catch((error) => ({ ok: false, mensaje: error.message }))
+}
+
+// Muestra u oculta los polígonos de una capa (suelo o usos) por categoría, quitándolos o
+// poniéndolos dentro de su propio grupo. No se reconstruye la capa ni se toca ninguna otra.
+// `claveLista` es el nombre bajo el que el grupo guarda su lista de polígonos
+// ('poligonosSuelo' o 'poligonosUsos'), así cada filtro solo afecta a su propia capa.
+function aplicarOcultasPoligonos(mapa, grupo, ocultas, claveLista) {
+  if (!grupo[claveLista]) grupo[claveLista] = grupo.getLayers()
+  const lista = grupo[claveLista]
+
+  lista.forEach((poligono) => {
+    const oculto = ocultas.has(poligono.feature?.properties?.categoria)
+    const presente = grupo.hasLayer(poligono)
+    if (oculto && presente) grupo.removeLayer(poligono)
+    else if (!oculto && !presente) grupo.addLayer(poligono)
+  })
+
+  // Las categorías se dibujan en un orden fijo: se reordenan al volver a mostrarlas
+  lista.forEach((poligono) => {
+    if (mapa.hasLayer(poligono)) poligono.bringToFront()
+  })
 }
 
 function obtenerCentroGeometria(geometry) {
@@ -187,7 +240,17 @@ function esperarTiles(capaTiles) {
   })
 }
 
-const Mapa = forwardRef(function Mapa({ capas, onMapReady, onClickMapa, resaltados }, refExterno) {
+const Mapa = forwardRef(function Mapa(
+  {
+    capas,
+    onMapReady,
+    onClickMapa,
+    resaltados,
+    sueloOcultas = SIN_OCULTAS,
+    usosOcultas = SIN_OCULTAS
+  },
+  refExterno
+) {
   const mapRef = useRef(null)
   const contenedorRef = useRef(null)
   const capasLeafletRef = useRef({})
@@ -198,6 +261,9 @@ const Mapa = forwardRef(function Mapa({ capas, onMapReady, onClickMapa, resaltad
   const ajustesVistaRef = useRef(new Set())
   const resaltadosLayerRef = useRef(null)
   const tileLayerRef = useRef(null)
+  const sueloOcultasRef = useRef(new Set(sueloOcultas))
+  const usosOcultasRef = useRef(new Set(usosOcultas))
+  const turnoPopupRef = useRef(0)
 
   const poligonoClicRef = useRef(null)
   const idPoligonoRef = useRef(null)
@@ -207,6 +273,57 @@ const Mapa = forwardRef(function Mapa({ capas, onMapReady, onClickMapa, resaltad
       mapRef.current.removeLayer(poligonoClicRef.current)
     }
     poligonoClicRef.current = null
+  }
+
+  // Abre un popup en el punto del clic, con "Consultando…", y lo completa cuando llegan los datos.
+  // closeOnClick:false para que el clic siga moviendo el punto central del mapa sin cerrarlo.
+  async function abrirPopupConsulta(latlng, cargar, armarHTML) {
+    const mapa = mapRef.current
+    if (!mapa) return
+
+    const turno = ++turnoPopupRef.current
+    const popup = L.popup({ maxWidth: 320, maxHeight: 380, closeOnClick: false })
+      .setLatLng(latlng)
+      .setContent(htmlCargandoSuelo())
+      .openOn(mapa)
+
+    try {
+      const datos = await cargar()
+      if (turnoPopupRef.current !== turno) return // ya hicieron otro clic
+      popup.setContent(armarHTML(datos))
+    } catch (error) {
+      if (turnoPopupRef.current !== turno) return
+      popup.setContent(htmlErrorSuelo(error.message))
+    }
+  }
+
+  // Popup unificado: al hacer clic sobre el suelo o sobre los usos, junta en un solo popup
+  // todas las capas de suelo y de usos que estén visibles en la MISMA zona.
+  function abrirPopupCapas(latlng, capaClic, todasCapas) {
+    const buscar = (tipo) =>
+      capaClic.tipo === tipo
+        ? capaClic
+        : [...todasCapas].reverse().find((c) => c.tipo === tipo && c.visible && mismaZona(c, capaClic)) || null
+
+    const capaSuelo = buscar('suelo')
+    const capaUsos = buscar('usos')
+    const punto = { lat: latlng.lat, lng: latlng.lng }
+
+    abrirPopupConsulta(
+      latlng,
+      async () => {
+        const [usos, suelo] = await Promise.all([
+          capaUsos ? resultadoConsulta(consultarUsoEnPunto(punto)) : null,
+          capaSuelo
+            ? resultadoConsulta(
+                consultarSueloEnPunto(punto, { centro: capaSuelo.zonaCentro, radioKm: capaSuelo.zonaRadioKm })
+              )
+            : null
+        ])
+        return { usos, suelo }
+      },
+      htmlPopupCapas
+    )
   }
 
   useImperativeHandle(refExterno, () => ({
@@ -275,6 +392,16 @@ const Mapa = forwardRef(function Mapa({ capas, onMapReady, onClickMapa, resaltad
     onClickMapaRef.current = onClickMapa
     onMapReadyRef.current = onMapReady
   }, [onClickMapa, onMapReady])
+
+  // Mantienen al día los filtros del suelo y de los usos para las capas que se creen de ahora en adelante.
+  // Van ANTES del efecto de capas a propósito: los efectos corren en el orden en que están escritos.
+  useEffect(() => {
+    sueloOcultasRef.current = new Set(sueloOcultas)
+  }, [sueloOcultas])
+
+  useEffect(() => {
+    usosOcultasRef.current = new Set(usosOcultas)
+  }, [usosOcultas])
 
   useEffect(() => {
     if (mapRef.current) return
@@ -463,7 +590,15 @@ const Mapa = forwardRef(function Mapa({ capas, onMapReady, onClickMapa, resaltad
           delete capasLeafletRef.current[capa.id]
         }
 
+        // Panel propio, por debajo del teselado (350): así las celdas del teselado
+        // siguen recibiendo el mouse y los clics aunque el suelo esté visible
+        if (!mapa.getPane('suelo')) {
+          mapa.createPane('suelo')
+          mapa.getPane('suelo').style.zIndex = 300
+        }
+
         const layer = L.geoJSON(capa.geojson, {
+          pane: 'suelo',
           style: (feature) => ({
             color: feature.properties?.categoriaColor || '#78716c',
             weight: 0.5,
@@ -474,8 +609,66 @@ const Mapa = forwardRef(function Mapa({ capas, onMapReady, onClickMapa, resaltad
           onEachFeature: (feature, capaLeaflet) => {
             const etiqueta = feature.properties?.categoriaEtiqueta || 'Sin categoría'
             capaLeaflet.bindTooltip(etiqueta, { sticky: true })
+
+            // Funcionalidad F: clic sobre el suelo -> clasificación del suelo en ese punto
+            // (y, si los usos oficiales de la misma zona están visibles, también el uso)
+            capaLeaflet.on('click', (evento) => {
+              abrirPopupCapas(evento.latlng, capa, capas)
+            })
           }
         })
+
+        // Aplica el filtro de categorías del suelo (panel "Clasificación del suelo")
+        aplicarOcultasPoligonos(mapa, layer, sueloOcultasRef.current, 'poligonosSuelo')
+
+        capasLeafletRef.current[capa.id] = layer
+
+        if (capa.visible) {
+          if (!mapa.hasLayer(layer)) layer.addTo(mapa)
+        } else if (mapa.hasLayer(layer)) {
+          mapa.removeLayer(layer)
+        }
+        return
+      }
+
+      // Usos del suelo OFICIALES (POT 48 de 2014, solo suelo urbano de Medellín)
+      if (capa.tipo === 'usos') {
+        const existing = capasLeafletRef.current[capa.id]
+        if (existing) {
+          mapa.removeLayer(existing)
+          delete capasLeafletRef.current[capa.id]
+        }
+
+        // Panel propio por debajo del suelo (300): los usos quedan al fondo y el resto
+        // de capas siguen recibiendo el mouse y los clics
+        if (!mapa.getPane('usos')) {
+          mapa.createPane('usos')
+          mapa.getPane('usos').style.zIndex = 250
+        }
+
+        const layer = L.geoJSON(capa.geojson, {
+          pane: 'usos',
+          style: (feature) => ({
+            color: feature.properties?.categoriaColor || '#94a3b8',
+            weight: 0.6,
+            opacity: 0.6,
+            fillColor: feature.properties?.categoriaColor || '#94a3b8',
+            fillOpacity: 0.25
+          }),
+          onEachFeature: (feature, capaLeaflet) => {
+            const etiqueta = feature.properties?.categoriaEtiqueta || 'Uso del suelo'
+            capaLeaflet.bindTooltip(escaparHTML(etiqueta), { sticky: true })
+
+            // Clic sobre un uso -> uso oficial en ese punto
+            // (y, si la clasificación del suelo de la misma zona está visible, también esa)
+            capaLeaflet.on('click', (evento) => {
+              abrirPopupCapas(evento.latlng, capa, capas)
+            })
+          }
+        })
+
+        // Aplica el filtro de categorías de los usos (panel "Usos del suelo")
+        aplicarOcultasPoligonos(mapa, layer, usosOcultasRef.current, 'poligonosUsos')
 
         capasLeafletRef.current[capa.id] = layer
 
@@ -511,6 +704,23 @@ const Mapa = forwardRef(function Mapa({ capas, onMapReady, onClickMapa, resaltad
           }),
           onEachFeature: (feature, capaLeaflet) => {
             capaLeaflet.bindTooltip(feature.properties?.categoriaEtiqueta || 'Celda', { sticky: true })
+
+            // Funcionalidad D: clic sobre una celda -> suelo y actividades de esa celda
+            capaLeaflet.on('click', (evento) => {
+              const ladoM = capa.resumenTeselado?.ladoM
+              const claveCelda = JSON.stringify(feature.geometry?.coordinates?.[0]?.[0] ?? evento.latlng)
+              abrirPopupConsulta(
+                evento.latlng,
+                () => consultarSueloEnCelda({
+                  zonaCentro: capa.zonaCentro,
+                  radioKm: capa.zonaRadioKm,
+                  ladoM,
+                  punto: { lat: evento.latlng.lat, lng: evento.latlng.lng },
+                  claveCelda
+                }),
+                (datos) => htmlCeldaTeselado(datos, ladoM)
+              )
+            })
           }
         })
 
@@ -635,6 +845,32 @@ const Mapa = forwardRef(function Mapa({ capas, onMapReady, onClickMapa, resaltad
       }
     })
   }, [capas])
+
+  // Filtro del suelo: solo toca las capas de suelo (no reconstruye nada más)
+  useEffect(() => {
+    const mapa = mapRef.current
+    if (!mapa) return
+
+    const ocultas = new Set(sueloOcultas)
+    Object.values(capasLeafletRef.current).forEach((capaLeaflet) => {
+      if (capaLeaflet.poligonosSuelo) {
+        aplicarOcultasPoligonos(mapa, capaLeaflet, ocultas, 'poligonosSuelo')
+      }
+    })
+  }, [sueloOcultas])
+
+  // Filtro de los usos oficiales: solo toca las capas de usos (no reconstruye nada más)
+  useEffect(() => {
+    const mapa = mapRef.current
+    if (!mapa) return
+
+    const ocultas = new Set(usosOcultas)
+    Object.values(capasLeafletRef.current).forEach((capaLeaflet) => {
+      if (capaLeaflet.poligonosUsos) {
+        aplicarOcultasPoligonos(mapa, capaLeaflet, ocultas, 'poligonosUsos')
+      }
+    })
+  }, [usosOcultas])
 
   useEffect(() => {
     const mapa = mapRef.current

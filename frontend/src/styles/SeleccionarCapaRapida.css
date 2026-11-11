@@ -1,0 +1,96 @@
+.zona-selector .zona-selector__ubicacion {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: auto;
+  margin: 0 0 10px;
+  padding: 9px 12px;
+  border: 1px solid #86d3a1;
+  border-radius: 10px;
+  background: #e3f6ea;
+  color: #166534;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.zona-selector .zona-selector__ubicacion:hover:not(:disabled) {
+  background: #cdeedb;
+  border-color: #5dbf84;
+}
+
+.zona-selector .zona-selector__ubicacion:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.zona-selector .zona-selector__radios {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: -4px 0 4px;
+}
+
+.zona-selector .zona-selector__radio {
+  flex: 1 1 auto;
+  min-width: 52px;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 6px 8px;
+  border: 1px solid #93b4f5;
+  border-radius: 999px;
+  background: #e8f0fe;
+  color: #1e40af;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.zona-selector .zona-selector__radio:hover {
+  background: #d3e3fd;
+  border-color: #6b97f0;
+}
+
+.zona-selector .zona-selector__radio.activo {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #ffffff;
+}
+
+/* Limpiar zonas: rojo suave, porque quita cosas del mapa */
+.zona-selector .zona-selector__limpiar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: auto;
+  margin: 10px 0 0;
+  padding: 8px 12px;
+  border: 1px solid #f2a8a8;
+  border-radius: 10px;
+  background: #fdecec;
+  color: #991b1b;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.zona-selector .zona-selector__limpiar:hover {
+  background: #fbd9d9;
+  border-color: #e98a8a;
+}
+
+.zona-selector .zona-selector__ubicacion:focus-visible,
+.zona-selector .zona-selector__radio:focus-visible,
+.zona-selector .zona-selector__limpiar:focus-visible {
+  outline: 3px solid #2563eb;
+  outline-offset: 2px;
+}

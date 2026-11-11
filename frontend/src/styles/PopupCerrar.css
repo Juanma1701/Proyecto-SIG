@@ -1,0 +1,30 @@
+.leaflet-container .leaflet-popup a.leaflet-popup-close-button {
+  top: 6px;
+  right: 6px;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(15, 23, 42, 0.35);
+  border-radius: 50%;
+  background: #f1f5f9;
+  color: #0f172a;
+  font: 700 26px/1 Arial, sans-serif;
+  text-decoration: none;
+}
+
+.leaflet-container .leaflet-popup a.leaflet-popup-close-button:hover {
+  background: #ffffff;
+  color: #b91c1c;
+}
+
+.leaflet-container .leaflet-popup a.leaflet-popup-close-button:focus-visible {
+  outline: 3px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.leaflet-popup .leaflet-popup-content {
+  margin: 14px 50px 14px 18px;
+}

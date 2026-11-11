@@ -1,0 +1,266 @@
+.guia-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(15, 23, 42, 0.55);
+}
+
+.guia-modal__caja {
+  width: 100%;
+  max-width: 720px;
+  max-height: min(86dvh, 720px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--color-borde);
+  border-radius: 18px;
+  background: var(--color-fondo);
+  color: var(--color-texto);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.35);
+}
+
+.guia-modal__cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--color-borde);
+  background: var(--color-tarjeta);
+  flex-shrink: 0;
+}
+
+.guia-modal__cabecera h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.guia-modal__cerrar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px 0 10px;
+  border: 1px solid var(--color-borde);
+  border-radius: 999px;
+  background: var(--color-fondo);
+  color: var(--color-texto);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.guia-modal__cerrar:hover {
+  border-color: var(--color-borde-hover);
+}
+
+.guia-modal__cerrar:focus-visible,
+.guia-modal__pestana:focus-visible,
+.guia-modal__enlace:focus-visible {
+  outline: 3px solid var(--color-acento);
+  outline-offset: 2px;
+}
+
+/* Las pestañas pasan a otra línea si la pantalla es angosta */
+.guia-modal__pestanas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px 16px 0;
+  flex-shrink: 0;
+}
+
+.guia-modal__pestana {
+  flex: 1 1 auto;
+  padding: 9px 12px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--color-texto-secundario);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.guia-modal__pestana:hover {
+  background: rgba(148, 163, 184, 0.15);
+  color: var(--color-texto);
+}
+
+.guia-modal__pestana.activa {
+  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.35);
+  color: var(--color-acento);
+}
+
+.guia-modal__cuerpo {
+  padding: 14px 16px 18px;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+/* ---------- Paso a paso ---------- */
+.guia-modal__pasos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.guia-modal__paso {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border: 1px solid var(--color-borde);
+  border-radius: 12px;
+  background: var(--color-tarjeta);
+}
+
+.guia-modal__numero {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--color-acento);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.guia-modal__paso h3 {
+  margin: 0 0 3px;
+  font-size: 14px;
+}
+
+.guia-modal__paso p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-texto-secundario);
+}
+
+/* ---------- Qué puede hacer ---------- */
+.guia-modal__rejilla {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px;
+}
+
+.guia-modal__tarjeta {
+  padding: 12px 14px;
+  border: 1px solid var(--color-borde);
+  border-radius: 12px;
+  background: var(--color-tarjeta);
+}
+
+.guia-modal__icono {
+  flex-shrink: 0;
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin-bottom: 6px;
+  border-radius: 9px;
+  background: rgba(59, 130, 246, 0.14);
+  color: var(--color-acento);
+}
+
+.guia-modal__tarjeta h3 {
+  margin: 0 0 4px;
+  font-size: 14px;
+}
+
+.guia-modal__tarjeta p {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--color-texto-secundario);
+}
+
+.guia-modal__nota {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 10px;
+  background: rgba(59, 130, 246, 0.1);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+/* ---------- Datos y licencias ---------- */
+.guia-modal__intro {
+  margin: 0 0 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-texto-secundario);
+}
+
+.guia-modal__fuentes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.guia-modal__fuente {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border: 1px solid var(--color-borde);
+  border-radius: 12px;
+  background: var(--color-tarjeta);
+}
+
+.guia-modal__fuente .guia-modal__icono {
+  margin-bottom: 0;
+}
+
+.guia-modal__fuente h3 {
+  margin: 0 0 2px;
+  font-size: 14px;
+}
+
+.guia-modal__fuente p {
+  margin: 0 0 4px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--color-texto-secundario);
+}
+
+.guia-modal__fuente .guia-modal__usa {
+  font-weight: 700;
+  color: var(--color-texto);
+}
+
+.guia-modal__enlace {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--color-acento);
+  word-break: break-all;
+}
+
+.guia-modal__avisos {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+.guia-modal__avisos li {
+  margin-bottom: 4px;
+}

@@ -1,53 +1,60 @@
-# Principios SOLID aplicados en el Visor Geográfico
+# Principios SOLID aplicados en GeoAburrá
 
-## S — Single Responsibility Principle
+## S — Responsabilidad única
 
-Cada módulo del proyecto tiene una única responsabilidad:
+Cada módulo tiene una sola razón para cambiar:
 
-- `utils/detectarCRS.js` → solo detecta el sistema de referencia de un archivo
-- `utils/reproyectar.js` → solo transforma coordenadas entre sistemas
-- `utils/guardarCapa.js` → solo gestiona la persistencia en Supabase
-- `components/CargarCapa.jsx` → solo maneja la carga de archivos
-- `components/PanelCapas.jsx` → solo maneja la reproyección y visibilidad de capas ya cargadas
+- `utils/detectarCRS.js`: solo detecta el sistema de referencia de un archivo.
+- `utils/reproyectarGeoJSON.js`: solo normaliza y reproyecta GeoJSON.
+- `utils/supabaseCapas.js`: solo guarda capas en Supabase.
+- `utils/zonasGuardadas.js`: solo guarda, lista y borra zonas.
+- `utils/consultasSuelo.js` y `utils/consultasUsos.js`: solo llaman a las funciones SQL de suelo y usos.
+- `utils/categoriasSuelo.js` y `utils/categoriasUsos.js`: solo definen colores, íconos y textos de cada categoría.
+- `utils/informePDF.js`: solo dibuja el PDF a partir de datos ya calculados.
+- `utils/enlaceZona.js`: solo lee y escribe la zona en la dirección del navegador.
+- `utils/fuentesDatos.js` y `utils/contenidoGuia.js`: solo contienen textos.
 
-Ningún archivo mezcla, por ejemplo, lógica de reproyección con lógica de conexión a Supabase.
+En los componentes, `CargarGeoJSON.jsx` solo carga archivos, `BotonGuardarNube.jsx` solo guarda, `LeyendaMapa.jsx` solo muestra y filtra la leyenda, y `AyudaInfo.jsx` solo muestra un texto de ayuda.
 
-## O — Open/Closed Principle
+## O — Abierto/Cerrado
 
-El sistema de renderizado (`Mapa.jsx` para Leaflet, `MapaGeoLibre.jsx` para MapLibre) está
-diseñado para poder **agregar nuevos motores de mapa sin modificar el resto del sistema**.
-Ambos componentes reciben el mismo array `capas` como prop y reaccionan a sus cambios de
-forma independiente — el resto de la aplicación (`CargarCapa`, `PanelCapas`, la lógica de
-CRS) no sabe ni le importa qué motor de renderizado está activo.
+Varias partes se amplían agregando datos, sin editar la lógica:
 
-Esto significa que agregar un tercer motor (por ejemplo, deck.gl) solo requeriría crear
-un nuevo componente `MapaX.jsx` con la misma interfaz de props, sin tocar nada más.
+- Una categoría nueva de usos del suelo se agrega a la lista de `categoriasUsos.js`; los paneles, la leyenda, los filtros y el informe PDF la recogen solos.
+- Una fuente de datos nueva se agrega a `fuentesDatos.js` y aparece en la guía y en el informe.
+- Un paso nuevo de la guía se agrega a `contenidoGuia.js` y cambia en la portada y en el visor.
+- Una herramienta nueva de la barra del mapa se agrega a la lista `HERRAMIENTAS` de `Dashboard.jsx`.
 
-## L — Liskov Substitution Principle
+Donde no se cumple del todo: `Mapa.jsx` dibuja cada tipo de capa (zona, límites, cobertura, suelo, usos, teselado y equipamientos) con una condición por tipo, así que agregar un tipo de capa nuevo obliga a editar ese archivo.
 
-`Mapa.jsx` y `MapaGeoLibre.jsx` son intercambiables entre sí porque ambos cumplen el mismo
-"contrato": reciben `capas`, `onMapReady` y `onClickMapa`, y producen el mismo comportamiento
-observable (dibujar las capas, permitir click para capturar coordenadas). El componente
-`Dashboard.jsx` puede alternar entre ellos (el toggle "Estándar" / "Alto rendimiento") sin
-que el resto de la aplicación note ninguna diferencia funcional.
+## L — Sustitución de Liskov
 
-## I — Interface Segregation Principle
+Los componentes que cumplen el mismo contrato se pueden intercambiar sin que el resto lo note:
 
-Los componentes reciben solo las props que realmente necesitan, no un objeto gigante con
-todo el estado de la aplicación:
+- `FiltroSuelo` y `FiltroUsos` reciben la capa, la lista de categorías ocultas y su setter, y se usan igual en el panel flotante.
+- `EstadisticasSuelo` y `EstadisticasUsos` reciben solo la zona y se muestran igual en las pestañas de estadísticas.
 
-- `CargarCapa` recibe únicamente `capas` y `setCapas`
-- `PanelCapas` recibe únicamente `capas` y `setCapas`
-- `InfoCRS` recibe únicamente `crs`
+`MapaGeoLibre.jsx` (MapLibre GL) conserva el contrato de props de la primera versión (`capas`, `onMapReady`, `onClickMapa`), pero ya no es un sustituto real de `Mapa.jsx`: el visor depende de funciones que solo tiene `Mapa.jsx` (suelo, usos, teselado, resaltados, captura para el PDF). Por eso ningún archivo lo importa.
 
-Ninguno depende de props que no usa (por ejemplo, ninguno recibe directamente la instancia
-del mapa de Leaflet o MapLibre — esa dependencia quedó encapsulada dentro de `Mapa.jsx`
-y `MapaGeoLibre.jsx`).
+## I — Segregación de interfaces
 
-## D — Dependency Inversion Principle
+Los componentes reciben solo las props que usan, no el estado completo de la aplicación:
 
-La lógica de negocio (detección de CRS, reproyección, guardado) no depende directamente
-de Leaflet ni de MapLibre — depende únicamente de GeoJSON como formato intermedio. Esto es
-lo que permite que `utils/reproyectar.js` y `utils/detectarCRS.js` se reutilicen sin cambios
-entre ambos renderizadores. La dependencia de alto nivel (la lógica geoespacial) no depende
-de detalles de bajo nivel (qué motor de mapas se use).
+- `IrAMunicipio` recibe solo `onIr`.
+- `GuiaModal` recibe solo `onCerrar`.
+- `InfoCRS` recibe solo `crs`.
+- `LeyendaMapa` recibe las dos capas que muestra, `setCapas` y un indicador de visibilidad.
+- `AnalisisRapido` recibe el punto, la zona activa y las funciones que necesita, no el estado de `Dashboard`.
+
+La instancia del mapa de Leaflet no se reparte por los componentes: la guarda `Dashboard.jsx` y `Mapa.jsx` la encapsula, y expone solo `getContenedor`, `prepararCaptura` y `restaurarCaptura`.
+
+## D — Inversión de dependencias
+
+La lógica de negocio no depende de detalles de bajo nivel:
+
+- Los componentes llaman funciones de `utils/` (por ejemplo `obtenerEstadisticasUsos` o `guardarCapaEnNube`) y no al cliente de Supabase directamente.
+- El informe PDF recibe datos ya preparados (`prepararUsosParaPDF`, `prepararEstadisticasSuelo`): no sabe de dónde salieron.
+- La detección y la reproyección de CRS trabajan con GeoJSON como formato intermedio, sin depender de Leaflet ni de MapLibre.
+- Los textos de la guía y las fuentes de datos están en módulos propios; la portada, la ventana de guía y el PDF dependen de ellos, y no al revés.
+
+Donde no se cumple del todo: `Dashboard.jsx` concentra el estado y conoce a casi todos los componentes, por lo que cualquier cambio de interfaz pasa por ese archivo.

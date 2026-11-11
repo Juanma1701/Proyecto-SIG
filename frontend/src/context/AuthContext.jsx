@@ -41,6 +41,10 @@ export function AuthProvider({ children }) {
   )
 }
 
+// Hook y componente comparten archivo a propósito: así todos los archivos importan
+// `useAuth` desde '../context/AuthContext'. Esa regla de ESLint solo afecta a la recarga
+// en caliente (hot reload) en desarrollo, no a la aplicación publicada.
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   return useContext(AuthContext)
 }

@@ -308,7 +308,8 @@ async function cargarMunicipio(municipio, { probar, temporal }) {
       categoria,
       // `nombre` es el campo que insertar_capa usa como columna `nombre`
       // de cada fila (coalesce con p_nombre si no viene).
-      nombre: nombreEquip || `Equipamiento sin nombre (${categoria})`,
+      // Si el equipamiento no trae nombre, se muestra "Sin nombre".
+      nombre: nombreEquip || 'Sin nombre',
       direccion: buscarCampo(feature.properties, CAMPOS_DIRECCION),
       telefono: buscarCampo(feature.properties, CAMPOS_TELEFONO),
       website: buscarCampo(feature.properties, CAMPOS_WEBSITE),

@@ -1,5 +1,3 @@
-import JSZip from 'jszip'
-
 const PATRONES_EPSG = [
   [/magna.*origen.*nacional/, 9377],
   [/magna.*colombia.*bogota/, 3116],
@@ -119,6 +117,7 @@ function detectarCRSGeoJSON(geojson) {
 
 async function detectarCRSShapefile(archivoZip) {
   try {
+    const { default: JSZip } = await import('jszip')
     const zip = await JSZip.loadAsync(archivoZip)
     const archivoPrj = Object.values(zip.files).find((archivo) =>
       archivo.name.toLowerCase().endsWith('.prj')

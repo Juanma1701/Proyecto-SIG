@@ -1,0 +1,38 @@
+.ir-municipio {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ir-municipio__etiqueta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--color-texto-secundario);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ir-municipio select {
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid #93b4f5;
+  border-radius: 10px;
+  background: #e8f0fe;
+  color: #1e40af;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ir-municipio select:hover {
+  background: #d3e3fd;
+  border-color: #6b97f0;
+}
+
+.ir-municipio select:focus-visible {
+  outline: 3px solid #2563eb;
+  outline-offset: 2px;
+}

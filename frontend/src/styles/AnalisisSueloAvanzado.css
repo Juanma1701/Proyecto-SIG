@@ -1,0 +1,88 @@
+.analisis-suelo {
+  margin-top: 4px;
+  color: var(--color-texto);
+}
+
+.analisis-suelo__subtitulo {
+  margin: 14px 0 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-texto-secundario);
+}
+
+.analisis-suelo__ayuda {
+  margin: 6px 0 0;
+  font-size: 11px;
+  line-height: 1.4;
+  opacity: 0.72;
+}
+
+.analisis-suelo__boton {
+  margin-top: 8px;
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 10px;
+  border: 1px solid var(--color-borde);
+  background: var(--color-tarjeta);
+  color: var(--color-texto);
+  cursor: pointer;
+}
+
+.analisis-suelo__boton:hover {
+  border-color: var(--color-borde-hover);
+}
+
+.analisis-suelo__boton--suave {
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+.analisis-suelo__scroll {
+  overflow-x: auto;
+}
+
+.analisis-suelo__tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.analisis-suelo__tabla th,
+.analisis-suelo__tabla td {
+  padding: 4px 5px;
+  border-bottom: 1px solid var(--color-borde);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.analisis-suelo__tabla th:first-child,
+.analisis-suelo__tabla td:first-child {
+  text-align: left;
+}
+
+.analisis-suelo__tabla th {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-texto-secundario);
+}
+
+.analisis-suelo__zona {
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.analisis-suelo__actual {
+  background: rgba(37, 99, 235, 0.08);
+  font-weight: 700;
+}
+
+.analisis-suelo__cambios {
+  margin: 8px 0 0;
+  padding-left: 16px;
+  font-size: 11px;
+  line-height: 1.5;
+}
