@@ -10,7 +10,7 @@ import '../styles/VolverInicio.css'
 import '../styles/PopupCerrar.css'
 import '../styles/HerramientasTip.css'
 import '../styles/MapaControles.css'
-import { Filter, Layers, BarChart3, History, MapPinned, MapPin, Sparkles, UserRound, Mountain, Building2, Home, Menu, X, BookOpen, Link2 } from 'lucide-react'
+import { Filter, Layers, BarChart3, History, MapPinned, MapPin, Sparkles, UserRound, Mountain, Building2, Home, Menu, X, BookOpen, Link2, Compass } from 'lucide-react'
 import MenuCapas from '../components/MenuCapas';
 import FiltroCategorias from '../components/FiltroCategorias';
 import FiltroSuelo from '../components/FiltroSuelo';
@@ -25,6 +25,9 @@ import HistorialZonas from '../components/HistorialZonas';
 import CargarCapaArchivo from '../components/CargarGeoJSON';
 import BotonGuardarNube from '../components/BotonGuardarNube';
 import QueHayCerca from '../components/QueHayCerca';
+import PanelConsultaTerritorial from '../components/PanelConsultaTerritorial';
+import MarcadorPredio from '../components/MarcadorPredio';
+import { dentroDelBuffer } from '../utils/predio';
 import { MUNICIPIOS_VALLE_ABURRA } from '../utils/municipiosValleAburra';
 import { leerZonaDeEnlace, escribirZonaEnEnlace, borrarZonaDeEnlace, urlDeZona } from '../utils/enlaceZona';
 import Inicio from './Inicio';
@@ -121,6 +124,12 @@ const HERRAMIENTAS = [
     etiqueta: 'Cerca',
     descripcion: 'Busca equipamientos cerca del último punto que marcaste en el mapa.',
     icono: MapPin
+  },
+  {
+    id: 'territorial',
+    etiqueta: 'Territorio',
+    descripcion: 'Consulta qué publican las fuentes del AMVA sobre el último punto que marcaste.',
+    icono: Compass
   }
 ]
 
@@ -142,6 +151,9 @@ export default function App() {
   const [profileActive, setProfileActive] = useState(false)
   const [rapidoVisible, setRapidoVisible] = useState(true)
   const [creandoZona, setCreandoZona] = useState(false)
+  const [mapaLeaflet, setMapaLeaflet] = useState(null)
+  const [predio, setPredio] = useState(null)
+  const [eligiendoPredio, setEligiendoPredio] = useState(false)
 
   const mapaRef = useRef(null)
   const zonaFormRef = useRef(null)
@@ -191,19 +203,22 @@ export default function App() {
     }
   }, [zonaId, zonaLat, zonaLng, zonaRadio])
 
-  // Esc cierra el panel abierto (si la guía está abierta, Esc cierra la guía y no el panel)
+  // Esc cancela la elección de un lugar; si no hay, cierra el panel abierto (si la guía está abierta, Esc cierra la guía)
   useEffect(() => {
     if (!panelAbierto || enInicio || guiaAbierta) return
     function alPulsar(evento) {
-      if (evento.key === 'Escape') setPanelAbierto(null)
+      if (evento.key !== 'Escape') return
+      if (eligiendoPredio) setEligiendoPredio(false)
+      else setPanelAbierto(null)
     }
     window.addEventListener('keydown', alPulsar)
     return () => window.removeEventListener('keydown', alPulsar)
-  }, [panelAbierto, enInicio, guiaAbierta])
+  }, [panelAbierto, enInicio, guiaAbierta, eligiendoPredio])
 
   // Se llama una vez cuando Mapa.jsx crea el mapa de Leaflet
   const alMapaListo = useCallback((mapa) => {
     mapaLeafletRef.current = mapa
+    setMapaLeaflet(mapa)
 
     // Escala gráfica (metros y kilómetros)
     L.control.scale({ imperial: false, position: 'bottomleft' }).addTo(mapa)
@@ -226,11 +241,23 @@ export default function App() {
     }
   }, [])
 
-  // Cada clic en el mapa guarda el punto y vuelve a mostrar la tarjeta "Analizar aquí"
+  // Cada clic en el mapa guarda el punto, vuelve a mostrar la tarjeta "Analizar aquí" y quita el lugar marcado
   const alClickMapa = useCallback((latlng) => {
     setCoordenada(latlng)
     setRapidoVisible(true)
+    setPredio(null)
   }, [])
+
+  // Lugar marcado dentro del buffer (no cambia el centro del buffer ni la última coordenada capturada)
+  const alElegirPredio = useCallback(
+    (latlng) => {
+      setEligiendoPredio(false)
+      setPredio({ lat: latlng.lat, lng: latlng.lng })
+      const { dentro } = dentroDelBuffer(zonaActiva?.centro, zonaActiva?.radioKm, latlng)
+      if (dentro === false) toast.warning('El lugar que marcaste queda fuera del buffer. Se consulta igual.')
+    },
+    [zonaActiva]
+  )
 
   // Mueve el mapa a un punto y lo marca como si se hubiera hecho clic ahí
   function irA(lat, lng, zoom = 15) {
@@ -460,6 +487,13 @@ return (
           <Mapa capas={capas} onMapReady={alMapaListo} onClickMapa={alClickMapa} resaltados={resaltados} sueloOcultas={sueloOcultas} usosOcultas={usosOcultas} />
         )}
 
+        <MarcadorPredio
+          mapa={mapaLeaflet}
+          eligiendo={eligiendoPredio && panelAbierto === 'territorial'}
+          predio={predio}
+          alElegir={alElegirPredio}
+        />
+
         {/* Tarjeta de arriba: la pista "haz clic en el mapa" y, con un punto elegido,
             los radios y el botón "Analizar aquí". Solo en el modo de zonas. */}
         {modoRenderer === 'leaflet' && (
@@ -577,6 +611,19 @@ return (
 
               {panelAbierto === 'cerca' && (
                 <QueHayCerca punto={coordenada} onResultados={setResaltados} />
+              )}
+
+              {panelAbierto === 'territorial' && (
+                <PanelConsultaTerritorial
+                  punto={coordenada}
+                  predio={predio}
+                  eligiendoPredio={eligiendoPredio}
+                  alEligirPredio={() => setEligiendoPredio((valor) => !valor)}
+                  alQuitarPredio={() => {
+                    setPredio(null)
+                    setEligiendoPredio(false)
+                  }}
+                />
               )}
             </div>
           </div>

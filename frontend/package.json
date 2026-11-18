@@ -8,6 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "test": "node --import ./scripts/registrar-resolver.mjs scripts/test-reproyeccion.mjs",
+    "test:territorial": "node scripts/test-registro-fuentes.mjs && node scripts/test-consulta-punto.mjs && node scripts/test-resolver-municipio.mjs && node scripts/test-adaptadores.mjs && node scripts/test-consulta-territorial.mjs && node scripts/test-resumen-territorial.mjs && node scripts/test-normativa.mjs && node scripts/test-normativa-zonas.mjs && node scripts/test-normativa-residencial.mjs && node scripts/test-normativa-actividad-multiple.mjs && node scripts/test-normativa-dotacional.mjs && node scripts/test-evaluar.mjs && node scripts/test-zona-oficial.mjs && node scripts/test-evaluar-en-punto.mjs && node scripts/test-erratas-capa-itagui.mjs && node scripts/test-correcciones-capa.mjs && node scripts/test-normativa-medellin.mjs && node scripts/test-ficha-normativa.mjs && node scripts/test-evaluar-medellin.mjs && node scripts/test-predio.mjs && node scripts/test-normativa-envigado.mjs && node scripts/humo-evaluar-envigado.mjs && node scripts/test-normativa-itagui-lectura.mjs && node scripts/test-normativa-sabaneta.mjs && node scripts/test-la-estrella.mjs && node scripts/test-la-estrella-punto.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

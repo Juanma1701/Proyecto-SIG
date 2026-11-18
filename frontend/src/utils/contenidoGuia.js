@@ -1,4 +1,4 @@
-import { MapPinned, MapPin, Layers, Mountain, Building2, BarChart3, Globe, Landmark } from 'lucide-react'
+import { MapPinned, MapPin, Layers, Mountain, Building2, BarChart3, Globe, Landmark, Compass, FileText } from 'lucide-react'
 import { FUENTES_DATOS, AVISOS_DATOS } from './fuentesDatos'
 
 export const FUNCIONES = [
@@ -33,6 +33,18 @@ export const FUNCIONES = [
       'En el suelo urbano de Medellín, ve para qué permite el POT de 2014 usar cada sector: vivienda, mezcla de usos, servicios para la comunidad y espacio público.'
   },
   {
+    icono: Compass,
+    titulo: 'Consulta territorial de un punto',
+    texto:
+      'Con el botón “Territorio”, marca un punto en el mapa y mira qué publican las fuentes sobre él: clasificación del suelo, uso actual, uso del POT, tratamientos, riesgos y suelos de protección, cada uno con su fuente. Si una fuente no responde, el panel te lo avisa y lo que falta puede estar incompleto.'
+  },
+  {
+    icono: FileText,
+    titulo: '¿Qué dice la norma?',
+    texto:
+      'En el panel Territorio, elige una actividad (licorera o estanquillo, restaurante o cafetería, supermercado, minimercado o tienda de barrio, discoteca o bar, gimnasio, farmacia o droguería, tienda de tecnología) y mira qué dice la norma cargada para ese punto. Está conectada para Medellín, Itagüí, Envigado, Sabaneta y La Estrella (esta última con cobertura parcial). Es una lectura orientativa: no es una licencia ni un concepto de uso del suelo, y hay que confirmarla con la oficina de Planeación del municipio.'
+  },
+  {
     icono: BarChart3,
     titulo: 'Estadísticas, informe y guardado',
     texto:
@@ -64,12 +76,27 @@ export const PASOS = [
   {
     titulo: 'Explora con los botones del mapa',
     texto:
-      'A la derecha hay una columna de botones (filtros, suelo, usos, capas, estadísticas, tus zonas y “Cerca”): pasa el cursor sobre cada uno para ver qué hace. Solo se abre un panel a la vez; ciérralo con “Cerrar” o con la tecla Esc. Abajo a la derecha, la leyenda te deja mostrar u ocultar categorías de equipamientos.'
+      'A la derecha hay una columna de botones (filtros, suelo, usos, capas, estadísticas, tus zonas, “Cerca” y “Territorio”): pasa el cursor sobre cada uno para ver qué hace. Solo se abre un panel a la vez; ciérralo con “Cerrar” o con la tecla Esc. Abajo a la derecha, la leyenda te deja mostrar u ocultar categorías de equipamientos.'
   },
   {
     titulo: 'Consulta un punto',
     texto:
       'Con el suelo o los usos visibles, haz clic en el mapa para ver el detalle de ese punto en una ventana. Con el teselado, haz clic en una celda que tenga equipamientos.'
+  },
+  {
+    titulo: 'Abre Territorio y revisa el punto',
+    texto:
+      'Marca el punto en el mapa (el centro de tu zona) y pulsa “Territorio”. El panel consulta las fuentes y te dice en qué municipio está el punto. Si el punto queda muy cerca del límite entre dos municipios, el panel te pide elegir uno. Por defecto se consulta el centro de tu zona; con “Consultar un lugar dentro del buffer” puedes marcar otro lugar dentro del radio, y con “Volver al centro del buffer” regresas al centro. Si alguna fuente no responde, el panel lo avisa: lo que falte puede estar incompleto.'
+  },
+  {
+    titulo: 'Elige una actividad y lee el resultado',
+    texto:
+      'En la tarjeta “¿Qué dice la norma?” elige la actividad que quieres evaluar. Algunas normas dependen del tamaño: en ese caso la tarjeta te pide el área del local en m² o el aforo. El resultado puede ser “compatible”, “compatible bajo condiciones”, “no compatible” o “información normativa insuficiente”. Esta última significa que con lo cargado no se puede concluir; la tarjeta te explica por qué y qué falta. Si la norma no nombra tu actividad, puedes elegir la tipología o la fila más parecida: entonces verás una lectura según tu elección, no una conclusión. En La Estrella la norma depende del área de actividad del predio, que el visor no puede ubicar: tienes que elegirla tú (aparece en la cartografía del PBOT o te la confirma Planeación). El resultado vale solo para el punto consultado, no para todo el radio, y nunca dice “autorizado”: confírmalo siempre con la oficina de Planeación del municipio.'
+  },
+  {
+    titulo: 'Abre “Más información de este punto”',
+    texto:
+      'Debajo del resultado hay un desplegable con el resumen del punto (clasificación del suelo, tratamiento, uso actual, zona de uso del POT, riesgo y protección), la norma completa del municipio y los datos tal como los publica cada fuente, con su servicio, capa y fecha. Sirve para entender de dónde sale cada dato.'
   },
   {
     titulo: 'Lee las estadísticas',
