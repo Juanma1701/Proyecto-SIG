@@ -1,0 +1,706 @@
+/* Panel "Territorio". Colores fijos (tema claro, igual que los demás paneles del mapa). */
+
+/* Panel angosto: así el mapa sigue visible. Se detecta por su contenido, sin tocar Dashboard.jsx.
+   Los valores de posición dependen de Dashboard.css [verificar]: si se ve mal, ajusta `right`. */
+.panel-flotante:has(.territorial) {
+  left: auto;
+  right: 92px;
+  width: min(420px, calc(100vw - 112px));
+  max-width: 420px;
+  height: auto;
+  max-height: calc(100dvh - 120px);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.territorial {
+  --t-texto: #1e293b;
+  --t-suave: #64748b;
+  --t-fondo: #f1f5f9;
+  --t-borde: #dde3ea;
+  --t-blanco: #ffffff;
+  --t-verde: #16a34a;
+
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  gap: 10px;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 0;
+  max-height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 14px;
+  border: 1px solid var(--t-borde);
+  border-radius: 14px;
+  background: var(--t-blanco);
+  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.18);
+  color: var(--t-texto);
+  font-size: 0.86rem;
+  line-height: 1.4;
+  text-align: left;
+}
+
+/* En una columna con scroll, los hijos no deben encogerse (el texto recortado se veía cortado). */
+.territorial > * {
+  flex-shrink: 0;
+}
+
+.territorial *,
+.territorial *::before,
+.territorial *::after {
+  box-sizing: border-box;
+}
+
+.territorial p,
+.territorial h3,
+.territorial h4,
+.territorial h5,
+.territorial ul,
+.territorial dl,
+.territorial dd {
+  margin: 0;
+}
+
+.territorial__titulo {
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--t-borde);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.territorial__subtitulo,
+.territorial__punto,
+.territorial__nota {
+  color: var(--t-suave);
+  font-size: 0.78rem;
+}
+
+.territorial__punto {
+  font-variant-numeric: tabular-nums;
+}
+
+.territorial__mensaje {
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px dashed var(--t-borde);
+  background: var(--t-fondo);
+  color: var(--t-suave);
+}
+
+.territorial__mensaje--error {
+  border-style: solid;
+  border-color: #fecaca;
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Municipio */
+.territorial__municipio {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--t-borde);
+  border-radius: 12px;
+  background: var(--t-fondo);
+}
+
+.territorial__municipio-texto {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.territorial__municipio-nombre {
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.territorial__rotulo {
+  color: var(--t-suave);
+  font-size: 0.74rem;
+  font-style: italic;
+}
+
+.territorial__icono {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid var(--t-borde);
+  background: var(--t-blanco);
+  color: #475569;
+}
+
+.territorial__icono--verde {
+  border-color: transparent;
+  background: var(--t-verde);
+  color: #ffffff;
+}
+
+.territorial__candidatos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.territorial__candidatos button {
+  padding: 6px 14px;
+  border: 1px solid var(--t-verde);
+  border-radius: 999px;
+  background: var(--t-blanco);
+  color: var(--t-verde);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.territorial__candidatos button:hover,
+.territorial__candidatos button:focus-visible {
+  background: var(--t-verde);
+  color: #ffffff;
+}
+
+.territorial__global {
+  padding: 8px 12px 8px 28px;
+  border-radius: 12px;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 0.8rem;
+}
+
+/* Tarjeta "Qué dice la norma" */
+.territorial__norma {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--t-borde);
+  border-radius: 12px;
+  background: var(--t-blanco);
+}
+
+.territorial__norma-etiqueta {
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.territorial__norma-selector {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid var(--t-borde);
+  border-radius: 8px;
+  background: var(--t-blanco);
+  color: var(--t-texto);
+  font: inherit;
+}
+
+.territorial__norma-tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--t-borde);
+  border-left-width: 5px;
+  border-radius: 10px;
+  background: var(--t-fondo);
+}
+
+.territorial__norma-tarjeta--compatible {
+  border-color: #86efac;
+  background: #f0fdf4;
+}
+
+.territorial__norma-tarjeta--condicionada {
+  border-color: #fcd34d;
+  background: #fffbeb;
+}
+
+.territorial__norma-tarjeta--incompatible {
+  border-color: #fca5a5;
+  background: #fef2f2;
+}
+
+.territorial__norma-tarjeta--insuficiente {
+  border-color: #cbd5e1;
+  background: var(--t-fondo);
+}
+
+.territorial__norma-titulo {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.territorial__norma-bajada {
+  font-size: 0.84rem;
+}
+
+.territorial__norma-seccion h5 {
+  margin-bottom: 2px;
+  color: var(--t-suave);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.territorial__norma-seccion ul {
+  padding-left: 16px;
+  font-size: 0.82rem;
+}
+
+.territorial__norma-seccion p {
+  font-size: 0.82rem;
+}
+
+.territorial__norma-seccion a {
+  color: #2563eb;
+}
+
+.territorial__norma-verificar {
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 0.8rem;
+}
+
+.territorial__norma-aviso {
+  padding-top: 6px;
+  border-top: 1px solid var(--t-borde);
+  color: var(--t-suave);
+  font-size: 0.72rem;
+}
+
+/* Ficha de resumen (compacta) */
+.territorial__ficha {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 2px 12px 8px;
+  border: 1px solid var(--t-borde);
+  border-radius: 12px;
+  background: var(--t-blanco);
+}
+
+.territorial__dato {
+  display: flex;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--t-fondo);
+}
+
+.territorial__dato-cuerpo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.territorial__etiqueta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--t-suave);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.territorial__valor {
+  font-size: 0.92rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.territorial__valor--chico {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.territorial__valor--chico:hover {
+  display: block;
+  -webkit-line-clamp: unset;
+  line-clamp: unset;
+}
+
+/* "Sin dato" y "No clasificado": información de menor peso */
+.territorial__dato--tenue {
+  padding: 5px 0;
+}
+
+.territorial__dato--tenue .territorial__valor {
+  color: var(--t-suave);
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+.territorial__dato--tenue .territorial__icono {
+  width: 26px;
+  height: 26px;
+  opacity: 0.7;
+}
+
+.territorial__subdato {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.territorial__subdato + .territorial__subdato {
+  margin-top: 6px;
+}
+
+.territorial__lista {
+  padding-left: 16px;
+}
+
+.territorial__mini {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 6px 10px;
+  margin-top: 2px;
+}
+
+.territorial__mini dt {
+  color: var(--t-suave);
+  font-size: 0.7rem;
+}
+
+.territorial__mini dd {
+  font-weight: 600;
+}
+
+/* Alertas */
+.territorial__alertas {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 0.82rem;
+}
+
+.territorial__alertas p,
+.territorial__alertas li {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.territorial__alertas svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.territorial__alertas ul {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  list-style: none;
+  padding: 0;
+}
+
+.territorial__alertas--calma {
+  background: var(--t-fondo);
+  color: var(--t-suave);
+}
+
+.territorial__alertas--alerta {
+  border: 1px solid #fcd34d;
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.territorial__errores {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #fee2e2;
+  color: #991b1b;
+  font-size: 0.8rem;
+}
+
+.territorial__errores svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Estados */
+.territorial__estado {
+  flex-shrink: 0;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-align: center;
+  text-transform: none;
+}
+
+.territorial__estado--ok {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.territorial__estado--vacio {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.territorial__estado--aviso {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.territorial__estado--error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Datos completos por fuente */
+.territorial__detalle {
+  border: 1px solid var(--t-borde);
+  border-radius: 12px;
+  background: var(--t-fondo);
+  padding: 8px 10px;
+}
+
+.territorial__detalle > summary,
+.territorial__avisos summary {
+  color: #334155;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.territorial__detalle[open] > summary {
+  margin-bottom: 8px;
+}
+
+.territorial__bloque {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+  padding: 10px;
+  border: 1px solid var(--t-borde);
+  border-radius: 10px;
+  background: var(--t-blanco);
+}
+
+.territorial__bloque-cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.territorial__bloque-cabecera h4 {
+  min-width: 0;
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.territorial__avisos ul {
+  margin-top: 4px;
+  padding-left: 18px;
+  color: var(--t-suave);
+  font-size: 0.76rem;
+}
+
+.territorial__registro {
+  padding: 8px;
+  border-radius: 8px;
+  background: var(--t-fondo);
+}
+
+.territorial__registro dl {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.territorial__campo {
+  display: grid;
+  grid-template-columns: minmax(80px, 38%) 1fr;
+  gap: 8px;
+}
+
+.territorial__campo dt {
+  color: var(--t-suave);
+  font-size: 0.72rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.territorial__campo dd {
+  overflow-wrap: anywhere;
+}
+
+.territorial__fuente {
+  color: var(--t-suave);
+  font-size: 0.72rem;
+  overflow-wrap: anywhere;
+}
+
+.territorial__fuente a {
+  color: #2563eb;
+}
+
+/* Aviso de alcance */
+.territorial__pie {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--t-borde);
+  border-radius: 12px;
+  background: var(--t-fondo);
+  font-size: 0.74rem;
+}
+
+.territorial__pie > svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--t-suave);
+}
+
+.territorial__pie p + p {
+  margin-top: 4px;
+}
+
+/* Qué punto se consulta: el centro del buffer o un lugar marcado dentro de él */
+.territorial__origen {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--t-borde);
+  border-radius: 12px;
+  background: var(--t-fondo);
+}
+
+.territorial__origen--lugar {
+  border-color: #fdba74;
+  background: #fff7ed;
+}
+
+.territorial__origen--eligiendo {
+  border-color: #fb923c;
+  background: #ffedd5;
+}
+
+.territorial__origen-texto {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1 1 180px;
+  font-size: 0.82rem;
+}
+
+.territorial__boton {
+  padding: 5px 12px;
+  border: 1px solid var(--t-verde);
+  border-radius: 999px;
+  background: var(--t-blanco);
+  color: var(--t-verde);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.territorial__boton:hover,
+.territorial__boton:focus-visible {
+  background: var(--t-verde);
+  color: #ffffff;
+}
+
+.territorial__boton--suave {
+  border-color: var(--t-borde);
+  color: #475569;
+}
+
+.territorial__boton--suave:hover,
+.territorial__boton--suave:focus-visible {
+  border-color: #475569;
+  background: #475569;
+  color: #ffffff;
+}
+
+/* Contenido plegado de "Más información de este punto" */
+.territorial__mas {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Pin naranja del lugar marcado (se dibuja en el mapa, fuera del panel) */
+.predio-pin span {
+  display: block;
+  width: 26px;
+  height: 26px;
+  margin: 0 2px;
+  border: 3px solid #ffffff;
+  border-radius: 50% 50% 50% 0;
+  background: #ea580c;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.45);
+  transform: rotate(-45deg);
+}
+
+.mapa--eligiendo-predio,
+.mapa--eligiendo-predio .leaflet-interactive,
+.mapa--eligiendo-predio .leaflet-grab {
+  cursor: crosshair !important;
+}
+
+/* Tarjeta de norma: que nada desborde el ancho del panel */
+.territorial__norma,
+.territorial__norma-tarjeta,
+.territorial__norma-seccion {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.territorial__norma-tarjeta {
+  overflow-wrap: anywhere;
+}
+
+.territorial__norma-seccion li,
+.territorial__norma-seccion p,
+.territorial__avisos li {
+  overflow-wrap: anywhere;
+}
+
+.territorial__norma-selector {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Lectura hipotética o elegida: se distingue de un resultado concluyente */
+.territorial__norma-lectura {
+  padding: 8px 10px;
+  border: 1px dashed #94a3b8;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.65);
+}

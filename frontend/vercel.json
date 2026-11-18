@@ -9,6 +9,10 @@
       "destination": "https://sim.metropol.gov.co/:path*"
     },
     {
+      "source": "/itagui/:path*",
+      "destination": "https://arcgis.itagui.gov.co/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

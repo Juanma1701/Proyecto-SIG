@@ -89,9 +89,11 @@ export default function GuiaModal({ onCerrar }) {
                 ))}
               </ul>
               <p className="guia-modal__nota">
-                <strong>Ten en cuenta:</strong> el suelo y los usos muestran lo que el POT permite o
-                planea, no lo que existe hoy en cada predio. Los usos solo cubren el suelo urbano de
-                Medellín y corresponden al POT de 2014.
+                 <strong>Ten en cuenta:</strong> el suelo y los usos muestran lo que el POT permite o
+                 planea, no lo que existe hoy en cada predio. Los usos solo cubren el suelo urbano de
+                 Medellín y corresponden al POT de 2014. La lectura de la norma por actividad es
+                 orientativa, solo existe para cinco municipios y debe confirmarse con la oficina de
+                 Planeación.
               </p>
             </>
           )}

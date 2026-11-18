@@ -23,8 +23,10 @@ export default function Inicio({ onIrAlVisor }) {
             </h1>
             <p className="inicio__lema">Visor de equipamientos urbanos y suelo del Valle de Aburrá</p>
             <p className="inicio__descripcion">
-              Explora los equipamientos del Valle de Aburrá (salud, educación, recreación y más) y
-              descubre cómo está clasificado el suelo de una zona y qué servicios tiene cerca.
+               Explora los equipamientos del Valle de Aburrá (salud, educación, recreación y más) y
+               descubre cómo está clasificado el suelo de una zona y qué servicios tiene cerca. En cinco
+               municipios también puedes consultar, de forma orientativa, qué dice la norma sobre una
+               actividad en un punto.
             </p>
 
             <div className="inicio__botones">
@@ -57,7 +59,7 @@ export default function Inicio({ onIrAlVisor }) {
             </div>
 
             <p className="inicio__pie">
-              Proyecto universitario · Datos: AMVA, OpenStreetMap y Alcaldía de Medellín
+              Proyecto universitario · Datos: AMVA, OpenStreetMap y alcaldías del Valle de Aburrá
             </p>
           </>
         )}
@@ -88,7 +90,9 @@ export default function Inicio({ onIrAlVisor }) {
             <p className="inicio__nota">
               <strong>Ten en cuenta:</strong> el suelo y los usos muestran lo que el POT permite o
               planea, no lo que existe hoy en cada predio. Los usos solo cubren el suelo urbano de
-              Medellín y corresponden al POT de 2014.
+              Medellín y corresponden al POT de 2014. La lectura de la norma por actividad es
+              orientativa, solo existe para cinco municipios y debe confirmarse con la oficina de
+              Planeación.
             </p>
 
             <div className="inicio__acciones">

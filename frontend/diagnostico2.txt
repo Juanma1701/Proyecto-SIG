@@ -1,0 +1,178 @@
+﻿=== 1. Zonas con diferencias: texto crudo, lectura del parser y transcripci├│n ===
+
+== ZU-AM-02
+  uso_comp crudo : "R-U, R-B, R-T, R-M1, -M2, C-1, C-9, S-7, S-8, S-15, D-5, D-8, D-10,"
+  uso_comp parser: [R-U,R-B,R-T,R-M1,R-M2,C-1,C-9,S-7,S-8,S-15,D-5,D-8,D-10]
+  uso_comp nuestra: [R-U,R-B,R-T,R-M1,R-M2,C-1,C-9,S-7,S-8,S-15,D-5,D-8,D-10]
+  uso_comp residuo: "-M2" | raros: []
+  uso_cond crudo : "C-3, S-3, S-4, S-5, S-11, S-16, S-19, S-24, S-26, I-5, D-1, D-2, D-3,"
+  uso_cond parser: [C-3,S-3,S-4,S-5,S-11,S-16,S-19,S-24,S-26,I-5,D-1,D-2,D-3]
+  uso_cond nuestra: [C-3,S-3,S-4,S-5,S-11,S-16,S-19,S-24,S-26,I-5,D-1,D-2,D-3]
+  uso_cond residuo: "" | raros: []
+
+== ZU-AM-04
+  uso_comp crudo : "R-U, R-B, R-T, R-M1, R-M2, R-M3 C-1, C-9, S-5, S-7, S-8, S-15, D-5, D-8, D-10,"
+  uso_comp parser: [R-U,R-B,R-T,R-M1,R-M2,R-M3,C-1,C-9,S-5,S-7,S-8,S-15,D-5,D-8,D-10]
+  uso_comp nuestra: [R-U,R-B,R-T,R-M1,R-M2,R-M3,C-1,C-9,S-5,S-7,S-8,S-15,D-5,D-8,D-10]
+  uso_comp residuo: "" | raros: []
+  uso_cond crudo : "C-2, C-3, S-3, S-4, S-6, S-11, S-16, S-19, S-24, S-26, I-5, D-1, D-2, D-3,"
+  uso_cond parser: [C-2,C-3,S-3,S-4,S-6,S-11,S-16,S-19,S-24,S-26,I-5,D-1,D-2,D-3]
+  uso_cond nuestra: [C-2,C-3,S-3,S-4,S-11,S-16,S-19,S-24,S-26,I-5,D-1,D-2,D-3]
+  uso_cond residuo: "" | raros: []
+
+== ZU-R-01
+  uso_comp crudo : "R-U, R-B, R-T, R-M1, R-M2, R-M3, C-1, S-7, S-8, S-15, D-5, D-8, D-10,"
+  uso_comp parser: [R-U,R-B,R-T,R-M1,R-M2,R-M3,C-1,S-7,S-8,S-15,D-5,D-8,D-10]
+  uso_comp nuestra: [R-U,R-B,R-T,R-M1,R-M2,R-M3,C-1,S-7,S-8,S-15,D-5,D-8,D-10]
+  uso_comp residuo: "" | raros: []
+  uso_cond crudo : "C-3, C-2*, I-5, S-4, S-5, S-6*, S-11, S-16, S-19, D-1, D-2, D-3,"
+  uso_cond parser: [C-3,C-2,I-5,S-4,S-5,S-6,S-11,S-16,S-19,D-1,D-2,D-3]
+  uso_cond nuestra: [C-3,C-2,I-5,S-4,S-5,S-6,S-11,S-14,S-16,S-19,S-22,D-1,D-2,D-3]
+  uso_cond residuo: "" | raros: []
+
+== ZU-R-25
+  uso_comp crudo : "R-U, R.-B, R-T, R-M1, R-M2, R-M3, C-1, S-8, S-7, S-15, D-5, D-8, D-10,┬á"
+  uso_comp parser: [R-U,R-B,R-T,R-M1,R-M2,R-M3,C-1,S-8,S-7,S-15,D-5,D-8,D-10]
+  uso_comp nuestra: [R-U,R-B,R-T,R-M1,R-M2,R-M3,C-1,S-7,S-8,S-15,D-5,D-8,D-10]
+  uso_comp residuo: "R -B" | raros: []
+  uso_cond crudo : "C-2*, C-3**, S-4, S-5, S-6*, S-11, S-16, S-19, I-5, D-1, D-2, D-3, D-7,"
+  uso_cond parser: [C-2,C-3,S-4,S-5,S-6,S-11,S-16,S-19,I-5,D-1,D-2,D-3,D-7]
+  uso_cond nuestra: [C-2,C-3,S-4,S-5,S-6,S-11,S-16,S-19,I-5,D-1,D-2,D-3,D-7]
+  uso_cond residuo: "" | raros: []
+
+== ZU-R-26
+  uso_comp crudo : "R-U, R.-B, R-T, R-M1, R-M2, R-M3, C-1, S-7, S-8, S-15, D-5, D-8, D-10,"
+  uso_comp parser: [R-U,R-B,R-T,R-M1,R-M2,R-M3,C-1,S-7,S-8,S-15,D-5,D-8,D-10]
+  uso_comp nuestra: [R-U,R-B,R-T,R-M1,R-M2,R-M3,C-1,S-7,S-8,S-15,D-5,D-8,D-10]
+  uso_comp residuo: "R -B" | raros: []
+  uso_cond crudo : "C-2*, C-3**, S-4, S-5, S-6*, S-11, S-16, S-19, I-5, D-1, D-2, D-3, D-7,"
+  uso_cond parser: [C-2,C-3,S-4,S-5,S-6,S-11,S-16,S-19,I-5,D-1,D-2,D-3,D-7]
+  uso_cond nuestra: [C-2,C-3,S-4,S-5,S-6,S-11,S-16,S-19,I-5,D-1,D-2,D-3,D-7]
+  uso_cond residuo: "" | raros: []
+
+== ZE-R-02
+  uso_comp crudo : "R-U, R-B, R-T, R-M1, RM2, C-1, S-7, S-8, S-15, D-5, D-10,"
+  uso_comp parser: [R-U,R-B,R-T,R-M1,R-M2,C-1,S-7,S-8,S-15,D-5,D-10]
+  uso_comp nuestra: [R-U,R-B,R-T,R-M1,R-M2,C-1,S-7,S-8,S-15,D-5,D-8,D-10]
+  uso_comp residuo: "" | raros: []
+  uso_cond crudo : "C-2*, C-3, S-5, S-9, S-11, S-16, S-19, I-5, D-1, D-2, D-3,  D-7,"
+  uso_cond parser: [C-2,C-3,S-5,S-9,S-11,S-16,S-19,I-5,D-1,D-2,D-3,D-7]
+  uso_cond nuestra: [C-2,C-3,S-5,S-9,S-11,S-16,S-19,I-5,D-1,D-2,D-3,D-7]
+  uso_cond residuo: "" | raros: []
+
+== ZU-R-08
+  uso_comp crudo : "R-U, R-B, R-T, RM-1, C-1, S-7, S-8, S-15, D-5, D-8, D-10,"
+  uso_comp parser: [R-U,R-B,R-T,R-M1,C-1,S-7,S-8,S-15,D-5,D-8,D-10]
+  uso_comp nuestra: [R-U,R-B,R-T,R-M1,C-1,S-7,S-8,S-15,D-5,D-8,D-10]
+  uso_comp residuo: "RM-1" | raros: []
+  uso_cond crudo : "RM-2*, S-4, S-5, S-11, S-16, S-19, I-5, D-1, D-2."
+  uso_cond parser: [R-M2,S-4,S-5,S-11,S-16,S-19,I-5,D-1,D-2]
+  uso_cond nuestra: [R-M2,S-4,S-5,S-11,S-16,S-19,I-5,D-1,D-2]
+  uso_cond residuo: "RM-2*" | raros: []
+
+== ZU-AM-13
+  uso_comp crudo : "R-U, R-B, R-T y R-M1, R-M-2, R-M3, C-1, C-3, C-4, C-7, C-9, C-11, C-12, C-13, S-5, S-7, S-8, S-9, S-15, S-18.┬á I-5, D-5, D-8, D-10,"
+  uso_comp parser: [R-U,R-B,R-T,R-M1,R-M2,R-M3,C-1,C-3,C-4,C-7,C-9,C-11,C-12,C-13,S-5,S-7,S-8,S-9,S-15,S-18,I-5,D-5,D-8,D-10]
+  uso_comp nuestra: [R-U,R-B,R-T,R-M1,R-M2,R-M3,C-1,C-3,C-4,C-7,C-9,C-11,C-12,C-13,S-5,S-7,S-8,S-9,S-15,S-18,I-5,D-5,D-8,D-10]
+  uso_comp residuo: "y R-M-2" | raros: []
+  uso_cond crudo : "C-2, C-5**, C-8, C-9, S-3, S-4, S-6, S-10, S-11, S-13*, S-14, S-16, S-17, S-19, S-22, S-24, S-26, I-3, I-4, D-1, D-2, D-3,"
+  uso_cond parser: [C-2,C-5,C-8,C-9,S-3,S-4,S-6,S-10,S-11,S-13,S-14,S-16,S-17,S-19,S-22,S-24,S-26,I-3,I-4,D-1,D-2,D-3]
+  uso_cond nuestra: [C-2,C-5,C-8,C-9,S-3,S-4,S-6,S-10,S-11,S-13,S-14,S-16,S-17,S-19,S-22,S-24,S-26,I-3,I-4,D-1,D-2,D-3]
+  uso_cond residuo: "" | raros: []
+
+== ZU-AM-14
+  uso_comp crudo : "R-U, R-B, R-T, R-M1, R-M-2, R-M3, C-1, C-9, C-11, C-12, C-13, S-5, S-7, S-8, S-9, S-15, S-18, D-5, D-8, D-10,"
+  uso_comp parser: [R-U,R-B,R-T,R-M1,R-M2,R-M3,C-1,C-9,C-11,C-12,C-13,S-5,S-7,S-8,S-9,S-15,S-18,D-5,D-8,D-10]
+  uso_comp nuestra: [R-U,R-B,R-T,R-M1,R-M2,R-M3,C-1,C-9,C-11,C-12,C-13,S-5,S-7,S-8,S-9,S-15,S-18,D-5,D-8,D-10]
+  uso_comp residuo: "R-M-2" | raros: []
+  uso_cond crudo : "C-2*, C-3, C-8, S-3*, S-4, S-6*, S-10, S-11, S-13**, S-16, S-19,┬áS-24, S-26, I-5, D-1, D-2, D-3,"
+  uso_cond parser: [C-2,C-3,C-8,S-3,S-4,S-6,S-10,S-11,S-13,S-16,S-19,S-24,S-26,I-5,D-1,D-2,D-3]
+  uso_cond nuestra: [C-2,C-3,C-8,S-3,S-4,S-6,S-10,S-11,S-13,S-16,S-19,S-24,S-26,I-5,D-1,D-2,D-3]
+  uso_cond residuo: "" | raros: []
+
+== ZU-AM-17
+  uso_comp crudo : "R-U*, R-B*, R-T* R-M1*, R-M-2*, R-M3*, C-1, C-3, C-4, C-5****, C-7****, C-8****, C-9, C-11, C-12, C-13, S-4,┬á S-5, S-7, S-8, S-9, S-15, S-18,┬á I-5, D-5, D-8, D-10,"
+  uso_comp parser: [R-U,R-B,R-T,R-M1,R-M2,R-M3,C-1,C-3,C-4,C-5,C-7,C-8,C-9,C-11,C-12,C-13,S-4,S-5,S-7,S-8,S-9,S-15,S-18,I-5,D-5,D-8,D-10]
+  uso_comp nuestra: [R-U,R-B,R-T,R-M1,R-M2,R-M3,C-1,C-3,C-4,C-5,C-7,C-8,C-9,C-11,C-12,C-13,S-4,S-5,S-7,S-8,S-9,S-15,S-18,I-5,D-5,D-8,D-10]
+  uso_comp residuo: "R-M-2*" | raros: []
+  uso_cond crudo : "C-2, C-6**, S-1**, S-2**, S-3, S-6, S-10****, S-11,  S-12****, S-13***, S-14**, S-16, S-17, S-19,┬á S-20**, S-22, S-24, S-25****, S-26, I-3****, I-4****, D-1, D-2, D-3, D-7,"
+  uso_cond parser: [C-2,C-6,S-1,S-2,S-3,S-6,S-10,S-11,S-12,S-13,S-14,S-16,S-17,S-19,S-20,S-22,S-24,S-25,S-26,I-3,I-4,D-1,D-2,D-3,D-7]
+  uso_cond nuestra: [C-2,C-6,S-1,S-2,S-3,S-6,S-10,S-11,S-12,S-13,S-14,S-16,S-17,S-19,S-20,S-22,S-24,S-25,S-26,I-3,I-4,D-1,D-2,D-3,D-7]
+  uso_cond residuo: "" | raros: []
+
+== ZU-AM-23
+  uso_comp crudo : "R-U, R-B, R-T, R-M1, R-M2, R-M3, C-1, C-3, C-4, C-9, S-5, S-7, S-8, S-15, I-5, D-5, D-8, D-10,"
+  uso_comp parser: [R-U,R-B,R-T,R-M1,R-M2,R-M3,C-1,C-3,C-4,C-9,S-5,S-7,S-8,S-15,I-5,D-5,D-8,D-10]
+  uso_comp nuestra: [R-U,R-B,R-T,R-M1,R-M2,R-M3,C-1,C-3,C-4,C-9,S-5,S-7,S-8,S-15,I-5,D-5,D-8,D-10]
+  uso_comp residuo: "" | raros: []
+  uso_cond crudo : "C-2, C-8, S-3, S-4, S-6, S-10, S-11, S-16, S-19, SÔÇô24, S-26, D-1, D-2, D-3,"
+  uso_cond parser: [C-2,C-8,S-3,S-4,S-6,S-10,S-11,S-16,S-19,S-24,S-26,D-1,D-2,D-3]
+  uso_cond nuestra: [C-2,C-8,S-3,S-4,S-6,S-10,S-11,S-16,S-19,S-24,S-26,D-1,D-2,D-3]
+  uso_cond residuo: "SÔÇô24" | raros: [U+2013]
+
+== ZU-AM-24
+  uso_comp crudo : "R-U, R-B, R-T, R-M1, R-M2, C-1, C-3, C-4, C-9, C-11, C-12, C-13, S-5, S-7, S-8, S-15, S-18. I-5, D-5, D-8, D-10,"
+  uso_comp parser: [R-U,R-B,R-T,R-M1,R-M2,C-1,C-3,C-4,C-9,C-11,C-12,C-13,S-5,S-7,S-8,S-15,S-18,I-5,D-5,D-8,D-10]
+  uso_comp nuestra: [R-U,R-B,R-T,R-M1,R-M2,C-1,C-3,C-4,C-9,C-11,C-12,C-13,S-5,S-7,S-8,S-18,I-5,D-5,D-8,D-10]
+  uso_comp residuo: "" | raros: []
+  uso_cond crudo : "C-2, C-5*, C-6, C-8. S-3, S-4, S-6, S-10, S-11, S-16, S-19, S-24, S-26, I-3, I-4, D-1, D-2, D-3,"
+  uso_cond parser: [C-2,C-5,C-6,C-8,S-3,S-4,S-6,S-10,S-11,S-16,S-19,S-24,S-26,I-3,I-4,D-1,D-2,D-3]
+  uso_cond nuestra: [C-2,C-5,C-6,C-8,S-3,S-4,S-6,S-10,S-11,S-16,S-19,S-24,S-26,I-3,I-4,D-1,D-2,D-3]
+  uso_cond residuo: "" | raros: []
+
+== ZU-AM-26
+  uso_comp crudo : "R-U*, R-B*, R-T* y R-M1*, R-M-2*, C-1, C-3, C-4, C-5, C-7, C-8, C-9, C-11, C-12, C-13, S-4, S-5, S-7, S-8, S-9, S-11, S-15, S-18, S-24,┬á I-5, D-5, D-8, D-10,"
+  uso_comp parser: [R-U,R-B,R-T,R-M1,R-M2,C-1,C-3,C-4,C-5,C-7,C-8,C-9,C-11,C-12,C-13,S-4,S-5,S-7,S-8,S-9,S-11,S-15,S-18,S-24,I-5,D-5,D-8,D-10]
+  uso_comp nuestra: [R-U,R-B,R-T,R-M1,R-M2,C-1,C-3,C-4,C-5,C-7,C-8,C-9,C-11,C-12,C-13,S-4,S-5,S-7,S-8,S-9,S-11,S-15,S-18,S-24,I-5,D-5,D-8,D-10]
+  uso_comp residuo: "y R-M-2*" | raros: []
+  uso_cond crudo : "C-2, C-6, S-1**, S-2**, S-3, S-6, S-10, S-12, S-13***, S-14****, S-16, S-17, S-19, S-20**, S-22****, S-24,  S-25, S-26, I-3, I-4, D-1, D-2, D-3, D-7,"
+  uso_cond parser: [C-2,C-6,S-1,S-2,S-3,S-6,S-10,S-12,S-13,S-14,S-16,S-17,S-19,S-20,S-22,S-24,S-25,S-26,I-3,I-4,D-1,D-2,D-3,D-7]
+  uso_cond nuestra: [C-2,C-6,S-1,S-2,S-3,S-6,S-10,S-12,S-13,S-14,S-16,S-17,S-19,S-20,S-22,S-24,S-25,S-26,I-3,I-4,D-1,D-2,D-3,D-7]
+  uso_cond residuo: "" | raros: []
+
+== ZU-AM-27
+  uso_comp crudo : "R-U*, R-B*, R-T* R-M1*, R-M-2*, C-1, C-3, C-4, C-5, C-7, C-8, C-9, C-11, C-12, C-13, S-4,┬á S-5, S-7, S-8, S-9, S-11, S-15, S-18, S-24,┬á I-5, D-5, D-8, D-10,"
+  uso_comp parser: [R-U,R-B,R-T,R-M1,R-M2,C-1,C-3,C-4,C-5,C-7,C-8,C-9,C-11,C-12,C-13,S-4,S-5,S-7,S-8,S-9,S-11,S-15,S-18,S-24,I-5,D-5,D-8,D-10]
+  uso_comp nuestra: [R-U,R-B,R-T,R-M1,R-M2,C-1,C-3,C-4,C-5,C-7,C-8,C-9,C-11,C-12,C-13,S-4,S-5,S-7,S-8,S-9,S-11,S-15,S-18,S-24,I-5,D-5,D-8,D-10]
+  uso_comp residuo: "R-M-2*" | raros: []
+  uso_cond crudo : "C-2, C-6, S-1, S-2, S-3, S-6, S-10, S-12, S-13***, S-14**, S-16, S-19, S-17, S-20, S-22**, S-24, S-25, S-26, I-3, I-4, D-1, D-2, D-3. D-7,"
+  uso_cond parser: [C-2,C-6,S-1,S-2,S-3,S-6,S-10,S-12,S-13,S-14,S-16,S-19,S-17,S-20,S-22,S-24,S-25,S-26,I-3,I-4,D-1,D-2,D-3,D-7]
+  uso_cond nuestra: [C-2,C-6,S-1,S-2,S-3,S-6,S-10,S-12,S-13,S-14,S-16,S-17,S-19,S-20,S-22,S-24,S-25,S-26,I-3,I-4,D-1,D-2,D-3,D-7]
+  uso_cond residuo: "" | raros: []
+
+== ZU-AM-28
+  uso_comp crudo : "R-U*, R-B*, R-T* y R-M1*, R-M-2*, C-1, C-3, C-4, C-5, C-7, C-8, C-9, C-11, C-12, C-13, S-4,┬á S-5, S-7, S-8, S-9, S-11, S-15, S-18, S-24,┬á I-5, D-5, D-8, D-10,"
+  uso_comp parser: [R-U,R-B,R-T,R-M1,R-M2,C-1,C-3,C-4,C-5,C-7,C-8,C-9,C-11,C-12,C-13,S-4,S-5,S-7,S-8,S-9,S-11,S-15,S-18,S-24,I-5,D-5,D-8,D-10]
+  uso_comp nuestra: [R-U,R-B,R-T,R-M1,R-M2,C-1,C-3,C-4,C-5,C-7,C-8,C-9,C-11,C-12,C-13,S-4,S-5,S-7,S-8,S-9,S-11,S-15,S-18,S-24,I-5,D-5,D-8,D-10]
+  uso_comp residuo: "y R-M-2*" | raros: []
+  uso_cond crudo : "C-2, C-6, S-1, S-2, S-3, S-6, S-10, S-12, S-13**, S-14, S-16, S-17, S-19, S-20, S-22, S-24, S-25, S-26, I-3, I-4, D-1, D-2, D-3, D-7,"
+  uso_cond parser: [C-2,C-6,S-1,S-2,S-3,S-6,S-10,S-12,S-13,S-14,S-16,S-17,S-19,S-20,S-22,S-24,S-25,S-26,I-3,I-4,D-1,D-2,D-3,D-7]
+  uso_cond nuestra: [C-2,C-6,S-1,S-2,S-3,S-6,S-10,S-12,S-13,S-14,S-16,S-17,S-19,S-20,S-22,S-24,S-25,S-26,I-3,I-4,D-1,D-2,D-3,D-7]
+  uso_cond residuo: "" | raros: []
+
+=== 2. Residuos del parser en TODA la capa (texto que no se entendi├│) ===
+ZU-AM-02 uso_comp: "-M2"
+ZU-AM-13 uso_comp: "y R-M-2"
+ZU-AM-14 uso_comp: "R-M-2"
+ZU-AM-23 uso_cond: "SÔÇô24"
+ZU-R-08 uso_comp: "RM-1"
+ZU-R-08 uso_cond: "RM-2*"
+ZU-R-25 uso_comp: "R -B"
+ZU-AM-16 uso_comp: "y"
+ZU-AM-28 uso_comp: "y R-M-2*"
+ZU-AM-17 uso_comp: "R-M-2*"
+ZU-AM-26 uso_comp: "y R-M-2*"
+ZU-AM-27 uso_comp: "R-M-2*"
+ZU-R-26 uso_comp: "R -B"
+
+=== 3. Pol├¡gonos sin c├│digo: tipo y subtipo ===
+501	Espacio p├║blico | Espacio p├║blico existente
+141	Espacio p├║blico | Espacio p├║blico proyectado
+
+=== 4. Muestra de zonas ZU-D ===
+ZU-D-03: uso_ppal="├üreas de actividad dotacional" subtipo="Dotacional proyectado" sector=" "
+   uso_comp="D-1, D-2, D-3," uso_cond="C-1, S-8, S-7, S-19," cod_ep="P_EQ_02"
+ZU-D-07: uso_ppal="├üreas de actividad dotacional" subtipo="Dotacional proyectado" sector=" "
+   uso_comp="D-1, D-2, D-3, D-5," uso_cond="C-1, S-8, S-7, S-19," cod_ep="P_EQ_03"
+ZU-D-09: uso_ppal="├üreas de actividad dotacional" subtipo="Dotacional proyectado" sector=" "
+   uso_comp="D-1, D-2, D-3, D-6," uso_cond="C-1, S-8, S-7, S-19," cod_ep="P_EQ_04"
