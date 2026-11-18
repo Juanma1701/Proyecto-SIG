@@ -14,8 +14,8 @@ Producción: https://proyecto-sig-nine.vercel.app/
 - **Clasificación del suelo (POT):** urbano, rural, protección y riesgo para los 10 municipios del Valle, con superficies, porcentajes y análisis por distancia al centro.
 - **Usos del suelo oficiales de Medellín:** capa del POT (Acuerdo 48 de 2014) para el suelo urbano de Medellín, en seis categorías oficiales (radio máximo de 3 km).
 - **Popup combinado:** al hacer clic se consultan el suelo y el uso de ese punto.
-- **Consulta territorial (panel Territorio):** para un punto marcado, consulta en vivo las fuentes del AMVA y muestra la clasificación del suelo, el uso actual, el uso normativo del POT, los tratamientos, los riesgos y los suelos de protección, cada uno con su fuente. Si una fuente no responde, lo avisa. Ver [Territorio](docs/TERRITORIO.md).
-- **Evaluación normativa ("¿Qué dice la norma?"):** evalúa una actividad (8 posibles) en el punto consultado, con la norma urbanística cargada de cinco municipios: Medellín, Itagüí, Envigado, Sabaneta y La Estrella (esta última con cobertura parcial). El resultado es orientativo, vale solo para el punto consultado y nunca dice "autorizado". Ver [Territorio](docs/TERRITORIO.md).
+- **Consulta territorial (panel Territorio):** para un punto marcado, consulta en vivo las fuentes del AMVA y muestra la clasificación del suelo, el uso actual, el uso normativo del POT, los tratamientos, los riesgos y los suelos de protección, cada uno con su fuente. Si una fuente no responde, lo avisa. Ver [Territorio](docs/explicacion/TERRITORIO.md).
+- **Evaluación normativa ("¿Qué dice la norma?"):** evalúa una actividad (8 posibles) en el punto consultado, con la norma urbanística cargada de cinco municipios: Medellín, Itagüí, Envigado, Sabaneta y La Estrella (esta última con cobertura parcial). El resultado es orientativo, vale solo para el punto consultado y nunca dice "autorizado". Ver [Territorio](docs/explicacion/TERRITORIO.md).
 - **Estadísticas e informe:** panel con pestañas (Resumen, Suelo, Usos, Servicios), exportación del mapa en PNG e informe PDF con "lectura rápida", fuentes y advertencias.
 - **Cuentas y zonas guardadas** con Supabase Auth, y **enlace compartible** de una zona (`#zona=lat,lng,radio`).
 - **Datos abiertos del AMVA por municipio** y **carga de archivos propios** (`.geojson`, `.zip` con shapefile, `.kml`) con detección del sistema de referencia y reproyección con proj4.
@@ -61,7 +61,7 @@ La clave `VITE_SUPABASE_ANON_KEY` es pública (viaja en el navegador). Nunca pon
 - **Normas en el código:** la norma urbanística de cada municipio está transcrita como un "instrumento" en `frontend/src/utils/normativa/<municipio>.js`, con su nombre, fecha de adopción, vigencia, cobertura, limitaciones y fuente. La evaluación se hace en el navegador, sin consultar un servidor de normas.
 - **Rendimiento:** el informe PDF, la exportación de imagen y `jszip` se descargan solo cuando se usan.
 
-Detalle de tablas, funciones y políticas: [Esquema de base de datos](docs/referencia/esquema-base-datos.md). Detalle de la consulta territorial: [Territorio](docs/TERRITORIO.md).
+Detalle de tablas, funciones y políticas: [Esquema de base de datos](docs/referencia/esquema-base-datos.md). Detalle de la consulta territorial: [Territorio](docs/explicacion/TERRITORIO.md).
 
 ## Municipios con norma conectada
 
@@ -126,7 +126,7 @@ Cada entidad conserva los derechos sobre sus datos: si vas a reutilizarlos, revi
 - No evalúa distancias a colegios, ruido, parqueaderos, riesgo del predio ni otros permisos, salvo que la norma los cite como condición; en ese caso solo los muestra, no los comprueba.
 - Solo hay norma cargada para Medellín, Itagüí, Envigado, Sabaneta y La Estrella; en La Estrella la cobertura es parcial y nunca se concluye desde el punto.
 
-Más detalle en [Análisis del suelo y los usos](docs/explicacion/analisis-suelo.md) y en [Territorio](docs/TERRITORIO.md).
+Más detalle en [Análisis del suelo y los usos](docs/explicacion/analisis-suelo.md) y en [Territorio](docs/explicacion/TERRITORIO.md).
 
 ## Estructura
 
@@ -160,7 +160,7 @@ npm test                  # reproyección
 npm run test:territorial  # consulta territorial y evaluación normativa
 ```
 
-`test:territorial` ejecuta en cadena todos los `scripts/test-*.mjs` de Territorio (y `humo-evaluar-envigado.mjs`); se detiene en la primera prueba que falle. También puedes correr una sola, por ejemplo `node scripts/test-la-estrella.mjs`. Qué prueba cada una: ver [Territorio](docs/TERRITORIO.md#cómo-se-prueba).
+`test:territorial` ejecuta en cadena todos los `scripts/test-*.mjs` de Territorio (y `humo-evaluar-envigado.mjs`); se detiene en la primera prueba que falle. También puedes correr una sola, por ejemplo `node scripts/test-la-estrella.mjs`. Qué prueba cada una: ver [Territorio](docs/explicacion/TERRITORIO.md#cómo-se-prueba).
 
 ## Documentación
 
@@ -169,7 +169,7 @@ npm run test:territorial  # consulta territorial y evaluación normativa
 - [Esquema de base de datos](docs/referencia/esquema-base-datos.md)
 - [Componentes](docs/referencia/componentes.md)
 - [Análisis del suelo y los usos](docs/explicacion/analisis-suelo.md)
-- [Territorio: consulta territorial y evaluación normativa](docs/TERRITORIO.md)
+- [Territorio: consulta territorial y evaluación normativa](docs/explicacion/TERRITORIO.md)
 - [Decisiones de arquitectura](docs/explicacion/decisiones-arquitectura.md)
 - [Principios SOLID aplicados](docs/explicacion/principios-solid.md)
 - [GDAL](docs/explicacion/gdal.md)
